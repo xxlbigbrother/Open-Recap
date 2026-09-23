@@ -1,262 +1,79 @@
 ---
 name: video-script
 description: >
- 对已完成分析的视频进行电影资料检索、导演与剪辑策划，再写带时间戳的中文解说并校验。work_dir 已包含
- agent_narration_brief.md 与 vlm_analysis.json 时使用。适用于故事方向、片段选择、画面/原声/旁白分工、
- 解说写作与复核。输入 work_dir 中的理解索引；输出 recap_story_plan.json、visual_audio_board.json、
- 可选 style_card.json、cut 模式需要的 clip_plan.json，以及通过校验的 narration.json。触发词：解说词、写解说、视频旁白、
- narration script、写稿、解说文案、剪辑思路、导演思路。
+ 消费已有 Gemini 视频理解与核实资料，由 Agent 写连续解说稿和候选 story，
+ 经 editorial.py 结构校验、语义评审后统一投影视听板与呈现计划。
+ 适用于中文电影精讲、故事方向、知识解释、原声交接和看片修改。
 ---
 
-## 1. 定位
+# 第二阶段：Agent 创作与候选评审
 
-本技能负责：创作方向、画面/声音计划、旁白写作与校验。Agent 不是 JSON 填写器，而要依次扮演：
+本阶段承接 Gemini 理解，交付供 `editorial_render.py` 使用的接受稿与执行计划。
+不运行 ASR / VLM，不合成配音或渲染。正常入口由包根 `run_skill.py video-script editorial.py` 调用，以使用包内模型路由。
 
-1. 导演
-2. 故事编辑
-3. 画面剪辑师
-4. 声音/旁白编辑
-5. 第一次观看的观众
+## 1. 核对输入与创作范围
 
-Agent 先记录简洁决定，再写时间线产物。`validate.py` 负责对理解索引做机械校验；full 模式还会把旁白对齐到安静窗口。
+项目 JSON 指定源身份、`movie_source` 时间范围、`understanding_dir` 和 `style_path`；路径相对项目文件解析。
+读取已有 `vlm_analysis.json`、`asr_result.json`、`understanding_index.json`、`agent_narration_brief.md` 和相关抽帧。
+已有理解错误只记入项目引用的 `verified_notes`，保留原理解数据；不得猜测代理媒体的时间偏移。
 
-下面的 `scripts/...` 均相对于本技能目录。若执行器从仓库根目录启动，请给脚本路径加上本技能的绝对目录。本技能不从其他技能目录读取参考文件或辅助脚本；外部输入只来自显式路径与 `work_dir` 产物。
+- **CREATE**：比较可行的故事角度，选择观众承诺、POV、主线和情绪变化。
+- **DIRECTED**：落实用户指定的结构、镜头、台词和表达。
+- **REVISION**：先记录修改项与冻结项，保留已认可内容，只修改受反馈影响的候选段落。
 
-### 1.1 创作控制模式
+阅读 [创作剪辑工作法](references/creative-editing-playbook.md)。重看、回放或知识解释同时参考 [重看式讲述](references/guided-rewatch.md)。风格和案例提供讲述方法，不能提供目标影片事实。
 
-先根据用户要求和 `work_dir` 判断本轮模式；它不是 `full|cut|dub` 渲染模式：
+## 2. 核实电影资料
 
-- **CREATE**：首次创作。比较至少两个真正可行的故事/剪辑假设后再选择。
-- **DIRECTED**：用户已指定结构、镜头、台词或表达。忠实落实，不为满足“创作流程”虚构替代方案。
-- **REVISION**：用户针对已有版本看片修改。最新反馈是当前事实来源；未点名部分默认冻结。
+按 [研究指南](references/research-guide.md) 生成或读取 `film_research.json`，筛选 `opening_brief.json`。
+开场交代影片身份，选择能帮助进入故事的背景；制作知识放在有对应证据的时刻。
+采用前打开来源核对，区分画面、对白、外部知识与解释。
 
-REVISION 先明确本轮修改项与冻结项，再编辑对应层：表达、口语节奏、字幕反馈更新 `style_card.json`；镜头、入出点、表演和声音分工更新 `visual_audio_board.json`；只有观众承诺、POV、主线或 beat 改变时才更新 `recap_story_plan.json`。被删除的镜头、原声或文案也要从相关计划中删除，不能保留过期锚点。不要把看片修改重新做成一次 CREATE。
+`film_research.json` 不会自动进入正式证据。将核实事实写成 `stage2_research.json` 的 `facts` 格式，在项目设置 `research_path`；具体字段见研究指南。
+研究或旁注变化后重新准备输入，不能把新 ID 直接补进临时证据快照。
 
-## 2. 读取素材并确认状态
+## 3. 准备证据与连续稿
 
-首先阅读：
-
-- `work_dir/agent_narration_brief.md`：场景、时长、安静窗口与字数预算。
-- `asr_writing_chunks.json`：长对白的写作分块。
-- `timeline_fusion.json`：判断某段是否有对白或静音槽。
-- `vlm_analysis.json` / `asr_result.json`：核对具体画面与原声证据。
-- brief 顶部列出的 contact sheet：不要只依赖场景摘要；反应、走位、静止和台词前后的具体时刻常常更重要。
-
-full 模式使用原片时间。cut 模式第一阶段只写 `clip_plan.json`；`edited_source.mp4` 产生后，第二阶段才按输出时间写 `narration.json`。
-
-写任何创作产物前，直接读取 `work_dir` 判断当前阶段：
-
-- `recap_run_manifest.json`：确认 `edit_mode`、源视频和本轮设置。
-- full 模式：没有 `narration.json` 时进入写稿；存在时先复核再校验。
-- cut 第一阶段：尚无 `clip_plan_validated.json` / `edited_source.mp4`，只写 `clip_plan.json`。
-- cut 第二阶段：两者都存在，按 `clip_plan_validated.json.clips[]` 中的 `source_start/end` 与 `output_start/end` 核对映射，再写输出时间的旁白。
-
-必须确认旁白没有跨越错误剪辑边界，也没有落进已删除区间。整个判断只依赖 `work_dir` 产物。
-
-## 3. 制定创作方案
-
-电影或长篇剧集在理解完成后、制定创作方案前，先阅读 [写稿前电影检索](references/research-guide.md)。片名明确时运行：
+从包根运行：
 
 ```bash
-python3 scripts/research_film.py --title "功夫" --year 2004 --work-dir <work_dir>
+python3 run_skill.py video-script editorial.py --project /path/project.json --work-dir /path/work --prepare-only
 ```
 
-脚本通过 Wikipedia / Wikidata 搜索并写入带来源的 `film_research.json`，不重跑或改写视频理解。Agent 再从中挑选 2–4 条与本期讲述角度真正相关的信息，写 `opening_brief.json`：`one_sentence_intro`、`selected_facts[{claim,purpose,source_ids}]`、`opening_promise`、`deferred_facts`。开场通常只需一句影片身份和一条创作背景；主创名单、票房和奖项不是必填清单。搜索摘要不能直接复制成旁白，外部事实必须保留来源。
+阅读本次返回的 `prepared_dir` 中的 `evidence_bundle.json`、`style_snapshot.json` 和输入记录。
+`prepared` 仅表示输入准备完成。详细项目契约与版本规则见 [参考驱动流程](references/reference-driven-workflow.md)。
 
-然后阅读 `references/creative-editing-playbook.md`，再按创作控制模式写或更新工作产物：
+Agent 先写 `author_draft.md`：连续口述、原声任务、信息揭示时机和知识解释后返回剧情的出口。
+旁白必须增加上下文、因果、预期或证据支持的解释；画面、原声或沉默足够时让出声音。
+句子服从口述与呼吸，不按字幕换行切碎，不追求固定覆盖率、知识点数量或暂停次数。
 
-用户选择重看式精讲，或要求改善独立点评、证据错位与原声衔接时，同时阅读 [重看式讲述与证据规划](references/guided-rewatch.md)。需要回放/定格时使用 `editorial_plan.json` 记录呈现操作、事件先后、语句证据与原声保护；它是可选呈现路径，不把定格描述塞进普通 `clip_plan.json` 而无人执行。
+再编排 `recap_story_plan.candidate.json`，字段以 `scripts/editorial_prompts.py` 的 `STORY_SHAPE` 和 `scripts/editorial_contract.py` 为准。
+所有证据 ID 来自本次正式证据包；研究主张使用 `kind: research`。纯原声段允许 `narration: null`。
+在同一个 story 中记录呈现操作、原声保护、旁白窗口、事件先后和证据关系，不单独维护另一套执行稿。
 
-当用户提供优秀解说参考并要求风格迁移或持续学习时，阅读 [参考驱动的创作执行](references/reference-driven-workflow.md)。使用 `editorial.py --prepare-only` 读取当前电影和风格案例，Agent先写连续稿、再共同编排画面与原声，最后通过 `--candidate` 验证/评审并统一投影。直接模型生成是可选实验路径，失败稿不能自动进入渲染。
+自审完整一段：删去无贡献的 beat；检查开头承诺和后文回收；保护完整问答、动作、反应与停顿。
+指向当前画面的句子必须在说话时展示具体证据；结果解释不能抢在事件前。回放和定格须有观看价值及明确返回点。
 
-1. **`recap_story_plan.json`**：导演意图、CREATE 中至少两个剪辑假设、选定的 POV / 主线，以及由“变化”定义的 beats。DIRECTED / REVISION 不强行新增假设。
-2. **`visual_audio_board.json`**：每拍的画面任务、具体表演/反应、入点/出点、`audio_owner`、原声锚点与 `narration_job`。
-3. **`style_card.json`（适用时）**：用户当前认可的声音、口语节奏、字幕阅读姿态和明确禁忌。收到表达或字幕反馈后更新原文件，而不是只改最终文案。
-
-只记录决定、证据锚点、被放弃的备选方案和简短理由，不写冗长思维过程。
-
-### 3.1 导演判断
-
-锁定：
-
-- 观众承诺
-- POV
-- 戏剧问题
-- 起始与结束情绪
-- 隐瞒与揭示
-- 结尾余味
-
-### 3.2 故事编辑
-
-CREATE 比较两个真正可行的结构后选择一个；DIRECTED / REVISION 沿用用户指定或已确认的结构，除非最新反馈明确改变故事方向。每个 beat 至少改变一项：知识、权力、目标、关系、情绪或风险。若删除后因果、人物和情绪都没有损失，该 beat 通常不应保留。
-
-### 3.3 画面剪辑
-
-选择具体时刻，而不是只选择事件。比较：
-
-- 说话者与倾听者
-- 动作与反应
-- 早进与晚进
-- 早出与多停半秒
-
-在不破坏理解的前提下晚进早出，同时保留不可替代的表演、停顿、失误、动作声和完整台词。
-
-### 3.4 声音与旁白分工
-
-先指定 `audio_owner`，再写字。旁白只允许承担以下 `narration_job`：
-
-- `context`
-- `causal_link`
-- `foreshadow`
-- `interpretation`
-- `transition`
-- `none`
-
-画面、原声或沉默已经足够时使用 `none`，不要默认铺旁白。
-
-### 3.5 cut 模式第一阶段
-
-cut 模式先根据 `recap_story_plan.json` 与 `visual_audio_board.json` 写原片时间的 `clip_plan.json`，此时不要写 `narration.json`：
-
-```json
-{
-  "target_duration": "10m",
-  "clips": [
-    {
-      "start": 12.0,
-      "end": 38.0,
-      "reason": "b01 | hook | knowledge: unknown→threat | POV=主角 | 保留倾听反应 | 入点=问题已问出 | 出点=沉默落地"
-    }
-  ]
-}
-```
-
-`reason` 统一使用：
-
-```text
-beat_id | function | change | POV | preferred moment | 入点 | 出点
-```
-
-片段顺序必须构成一条完整故事线，而不是无序高光。可使用 0–1 个 cold open，随后回到因果清楚的 setup → turn → escalation → payoff。片段长度服从具体时刻，不使用统一秒数模板；片尾必须保留完整台词或动作。对短时间内密集的 scene-change 候选，先区分原片切点与本次拼接点：原片无关短镜头整段删，相关短镜头扩展到完整动作/反应；本次拼接点优先移动边界、恢复同源连续运动或合并片段，尽量不制造人工闪切。
-
-## 4. 撰写旁白
-
-full 模式直接按原片时间写；cut 第二阶段先查看 `edited_source.mp4` 与剪后故事板，补充 `visual_audio_board.json` 的输出时间并重新确认 `audio_owner` / `narration_job`，再按输出时间写：
-
-显式呈现路径按 `presentation_compiled.json` / `presentation_source.mp4` 的输出时间定稿。先写完整口述和证据顺序，再用实际配音长度确定最终位置；回放和定格改变时间后，不复用旧的固定偏移量。已绑定证据的旁白不能被后续窗口对齐或紧凑放置静默挪动。
-
-```json
-[
-  {
-    "start": 5.0,
-    "end": 12.0,
-    "narration": "解说文本。",
-    "pause_after_ms": 250,
-    "overlaps_speech": true,
-    "emotion": "紧张"
-  }
-]
-```
-
-字段说明：
-
-| 字段 | 含义 |
-|------|------|
-| `start` / `end` | full 模式为原片时间；cut 第二阶段为输出时间 |
-| `narration` | 解说文本 |
-| `pause_after_ms` | 段后停顿，默认 250ms |
-| `overlaps_speech` | 是否与原对白重叠；连续铺底窗口通常为 `true`，真正静音槽才为 `false` |
-| `emotion` | 整个解说块的 MiMo TTS 情绪/语气标签 |
-
-### 4.1 写作规则
-
-1. **先有 `narration_job`，后有句子**：没有明确任务就不写；旁白不是默认音轨。
-2. **按连续思路写**：旁白拥有一个 beat 时，用一个或少量完整句子完成“前提 → 触发动作 → 变化/意义”，并在一次 TTS 中合成。句号服从口语思路和呼吸，不服从字幕换行；不要固定句数，也不要“一句一停”。
-3. **7:3 不是配额**：只在素材判断不足时作为避免墙到墙旁白的粗略首稿参考。实际比例服从 `audio_owner`；强对白、动作声或沉默可以完整拥有一个 beat。
-4. **视听接力**：旁白若引出原声，块尾要让观众想听；原声结束后的下一块要承接它造成的变化。
-5. **按有效语速控量**：用 `字数 / brief 头部 speech budget` 估算窗口；装不下时删减或拆分叙事任务，不用加速堆字。
-6. **不看图说话**：旁白只增加上下文、因果、预期、证据支持的解释或跨越。
-7. **人物与证据优先**：优先使用已知角色名；关系、动机、潜台词和结果必须指向 visual / ASR / research / user context，且不能把背景资料伪装成当前画面事实。
-8. **写给耳朵听**：使用具体名词和动词，句子完整、口语可听；避免字幕腔、半句、空泛拔高和破折号。TTS 文本先保证听感连续，字幕再按阅读宽度拆分，不能反过来把朗读稿切碎。
-9. **避免模板化纠偏**：“不是 A，而是 B”只在确实存在一个观众可能相信、而素材又要纠正的判断时使用。它不是禁句，但不能靠先否定再肯定制造假洞察；优先直接写人物的动作、因果和后果。
-
-### 4.2 解说结构
-
-- **钩子**：提出正文会真实兑现的问题或利害，不用无关留存话术。
-- **主线**：围绕选定 POV 与主线推进，不在每个场景重新开篇。
-- **递进**：后续 beat 必须提高风险、改变关系或提供新信息。
-- **悬念缺口**：只预告之后真的会回收的后果。
-- **收尾**：回答或有意转化开头问题，留下明确余味。
-- **衔接**：旁白块与相邻原声属于同一个 beat，前者铺垫、后者呈现、下一块承接。
-
-### 4.3 原声留白字幕
-
-可选写 `original_subtitles.json`，使用成片输出时间：
-
-```json
-[{"start": 15.0, "end": 17.0, "text": "原声台词"}]
-```
-
-只写留白中实际听得到的台词，订正 ASR 错字与人名，每条尽量控制在一行；被旁白盖住或已经剪掉的句子不要写。省略时，合成阶段会使用保守的 ASR 映射兜底，并在成片中用 `「」` 区分原声对白与旁白。
-
-## 5. 创作自审
-
-在调用 LLM 评审前做以下**反事实检查**：
-
-1. 删除每个 beat：若因果、人物、情绪或承诺没有损失，就删除。
-2. 比较说话者/动作与倾听者/反应：保留更符合 POV 和情绪的时刻。
-3. 静音旁白：画面与原声仍应承载可见行动、人物行为和关键情绪。
-4. 只听声音：旁白应形成可听懂的主线，而不是画面字幕。
-5. 把旁白换成原声或沉默：若场景自身更有力量，就让出声音所有权。
-6. 检查开头问题是否真实，结尾是否回答或转化它。
-7. 检查相邻短句能否合成一个连续思路；字幕分行不得成为 TTS 断句理由。
-
-只记录并优先修复 1–3 个回报最高的问题；先改结构，再润色句子。
-
-REVISION 还要逐项确认：用户点名的问题已经改变，未点名的冻结项没有意外变化，相关 `style_card.json` / `visual_audio_board.json` 中不存在旧镜头或旧表达。除非用户要求备选版本，不额外扩展新方向。
-
-## 6. 评审与校验
-
-### 6.1 建议型语义评审
+## 4. 提交候选与统一投影
 
 ```bash
-python3 scripts/review.py --work-dir <work_dir>
+python3 run_skill.py video-script editorial.py --project /path/project.json --work-dir /path/work --candidate /path/recap_story_plan.candidate.json
 ```
 
-评审会自动识别 cut 模式，并在存在已校验剪辑计划时按输出时间线核对；`--timeline source` 可强制使用原片时间。打开 `narration_review.md`，逐项处理 `error`，尤其是 `category=hallucination`。
+入口执行结构检查和一次语义评审，不自动改写 Agent 候选。检查本次状态与内容：
 
-重复修改并评审，直到：
+- `ready_for_editorial_review`：候选获接受，仍需真实配音校准与看片。
+- `needs_review`：检查本次 attempt 的问题，修订候选后重新提交，不直接渲染。
+- `prepared`：只有准备输入，没有接受新稿。
 
-- `verdict` 为 `PASS` / `OK` 且没有 `error`；或
-- 对仍保留的问题做明确 override。
+接受稿统一写出 `recap_story_plan.json`、`visual_audio_board.json`、`editorial_plan.json` 和 `narration_draft.md`，执行计划绑定父稿指纹。
+失败提交与 prepare-only 保留上一份接受产物，因此根目录存在成品文件不能证明本次候选通过。
+不要手改投影文件或摘要来掩盖不同版本。确有证据的语义评审异议按参考驱动流程的 `review_decision_path` 契约处理。
 
-覆盖决定追加到 `work_dir/narration_review_override.md`：
+省略 `--candidate` 的模型生成仍是显式实验路径，不能替代默认 Agent 创作流程。
 
-```markdown
-### 覆盖记录 — <date>
-- 问题：segment 4 / category=hallucination
-- 评审意见：“他早已知情”缺少画面/对白依据
-- 决定：KEEP — 该事实来自用户提供的当前集背景，而非未来剧情
-- 签署：<agent/human>
-```
+## 5. 交给渲染与看片
 
-`review.py` 本身只写报告，默认调用策略为建议型、失败开放；若调用方显式开启严格评审，事实矛盾、残句、解析失败或评审不可用可在 TTS 前阻断。覆盖记录只用于审计，`review.py` / `validate.py` 不读取它。
-
-### 6.2 确定性硬校验
-
-```bash
-python3 scripts/validate.py --work-dir <work_dir> --mode full
-# cut 输出时间线由编排器使用 --mode cut_output
-```
-
-命令写出 `narration_lint.json`。full 模式还会根据安静窗口重写 `narration.json` 的时间。修复所有 error 后重复运行，直到校验干净，再继续 TTS 与合成。
-
-片名或题材明确但缺少剧情上下文时，先按本技能的 `references/research-guide.md` 写 `background_research.json`。若理解素材偏薄，brief 中的数量只能当上限：宁可少写、写实，也不要为凑数复述画面。
-
-## 7. 能力边界
-
-- 不运行 ASR / VLM；只消费视频理解索引。
-- 不合成 TTS，也不渲染视频。
-- 不根据平台分析做优化；先建立内容意图与剪辑一致性。
-- `review.py` 不改写 `narration.json`；是否采用严格门禁由调用方决定。
-- `validate.py` 不改写文本含义，只检查或对齐时间与安静窗口。
+由包根 `editorial_render.py --audio-only` 获取真实配音长度，再检查呈现窗口与证据同步。
+超时先修改完整表达或有价值的画面，不截语音、不无声删字、不额外提速；改稿后重新提交同一候选入口。
+检查实际画面、字幕、原声交接和完整声音主线，分别报告机械检查与真实观看、听审范围。

@@ -44,7 +44,7 @@
 
 ## 执行与复核
 
-需要回放/定格时，按可用的呈现契约编写 `editorial_plan.json`，将 `after_events` 和 `proof_cues` 对应到实际展示操作。`proof_cues` 的语音偏移可在配音后通过词时间核定；没有词时间时必须标明是人工估计，看片确认。
+需要回放/定格时，在 `recap_story_plan.candidate.json` 的呈现操作中记录事件先后和证据关系，经 `editorial.py --candidate` 统一投影为 `editorial_plan.json`；检查生成的 `after_events` 和 `proof_cues` 对应实际展示操作，不手工维护另一份计划。`proof_cues` 的语音偏移可在配音后通过词时间核定；没有词时间时必须标明是人工估计，看片确认。
 
 检查完整一段的声音逻辑，再看渲染后的语句与画面，不只校验 JSON。没有实际播放、听审的范围如实记录；机器时间检查不能证明趣味、语气或观看意愿。
 

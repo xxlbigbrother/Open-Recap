@@ -1,6 +1,6 @@
 # 创作剪辑工作法
 
-本参考只规定 Agent 的创作判断，不增加渲染模块。进入剪辑或写稿前，先完成这里的决策，再写 `clip_plan.json` 或 `narration.json`。
+本参考规定 Agent 的创作判断。先写连续口述，再把决定编入 `recap_story_plan.candidate.json`，由 `editorial.py --candidate` 校验、评审并统一投影执行计划。
 
 ## 先判断创作控制模式
 
@@ -8,7 +8,7 @@
 - **DIRECTED**：用户已经指定结构、镜头、台词或表达，目标是准确落实而不是展示替代创意。
 - **REVISION**：基于已有版本看片修改。最新反馈覆盖旧决定；本轮未点名内容默认冻结。
 
-REVISION 先列本轮修改项与冻结项。表达、节奏、字幕意见写回 `style_card.json`，镜头与声音意见写回 `visual_audio_board.json`；只有故事主线改变才更新 `recap_story_plan.json`。删除内容时也删除过期的计划描述。完成后分别验证“该变的确实变了”和“不该变的没有漂移”。
+REVISION 先列本轮修改项与冻结项。在项目风格约定与候选 story 中落实表达、镜头和声音修改，再经同一候选入口统一投影。删除内容时也删除过期的证据和呈现关系；不手改生成的视听板。完成后分别验证修改项与冻结项。
 
 ## 决策优先级
 
@@ -66,7 +66,7 @@ beat 不是固定秒数、场景名或一句旁白；beat 是一次可感知的�
 - **节奏**：这一拍需要冲过去，还是需要多停半秒让含义落地？
 - **边界**：优先完整动作、完整台词和自然声音边界；不要机械地把每个片段切成同一长度。
 
-进入 `clip_plan.json` 的不是“发生过的所有重要事件”，而是最能让观众经历这条主线的具体时刻。
+候选 story 的呈现操作应选择最能让观众经历主线的具体时刻。
 
 目标不是绝对最短，而是**最短但完整**：晚进不能丢掉理解动作所需的前提，早出不能吃掉表演的回报。建立空间和事实的镜头通常可以短；关键对视、亲吻、受伤反应、决定落地或沉默可以多停一点，让观众先感受到再离开。
 
@@ -94,7 +94,7 @@ ffmpeg -i input.mp4 -vf "select='gt(scene,0.35)',showinfo" -an -f null -
 
 ### 4. 声音与旁白：先分工，再写字
 
-每个 beat 先指定一个主要 `audio_owner`：
+每个 beat 先决定声音由谁承担，再映射到候选的原声保护、呈现音轨和旁白窗口：
 
 - `original_dialogue`：原对白本身就是事件或表演；
 - `action_sound`：动作声音承担冲击、因果或空间感；
@@ -102,7 +102,7 @@ ffmpeg -i input.mp4 -vf "select='gt(scene,0.35)',showinfo" -an -f null -
 - `silence`：沉默、停顿或呼吸是内容；
 - `narration`：画面和原声无法独自交代必要的上下文、因果或预期。
 
-只有当旁白有明确工作时才写。`narration_job` 只能从以下任务中选择：
+只有当旁白有明确工作时才写。创作时可用以下任务判断旁白是否必要（候选字段以 `STORY_SHAPE` 为准）：
 
 - `context`：补充看不见但必要的背景；
 - `causal_link`：连接被压缩掉的因果；
@@ -139,87 +139,8 @@ ffmpeg -i input.mp4 -vf "select='gt(scene,0.35)',showinfo" -an -f null -
 
 ## Agent 创作产物
 
-这些是简洁的决策记录，不是公开的完整思维过程。CLI 可以忽略它们，但后续 Agent 与建议型评审会使用它们保持创作一致。
+`author_draft.md` 记录连续口述与原声交接；`recap_story_plan.candidate.json` 是提交的单一候选。
+字段以 `scripts/editorial_prompts.py` 的 `STORY_SHAPE` 和 `scripts/editorial_contract.py` 为准，不另造兼容稿件格式。
 
-### `recap_story_plan.json`
-
-```json
-{
-  "schema_version": 1,
-  "director_intent": {
-    "viewer_promise": "观众最终得到的具体体验",
-    "pov": "主要跟随谁，以及为什么",
-    "dramatic_question": "贯穿全片的问题",
-    "emotional_start": "起始情绪",
-    "emotional_end": "结束情绪",
-    "ending_aftertaste": "最后余味",
-    "withhold_reveal": "保留什么，何时揭示"
-  },
-  "hypotheses": [
-    {"id": "h1", "spine": "方案一主线", "opening": "如何进入", "ending": "如何落地", "risk": "主要风险"},
-    {"id": "h2", "spine": "方案二主线", "opening": "如何进入", "ending": "如何落地", "risk": "主要风险"}
-  ],
-  "chosen_hypothesis": "h1",
-  "choice_reason": "为什么它更符合素材中的人物、故事和情绪",
-  "beats": [
-    {
-      "beat_id": "b01",
-      "source_id": "可选，多视频时填写",
-      "source_start": 12.0,
-      "source_end": 20.0,
-      "function": "hook|setup|turn|escalation|payoff",
-      "event": "可观察到的事件",
-      "change": "knowledge|power|emotion|goal: before -> after",
-      "audience_question_in": "进入前观众想知道什么",
-      "audience_question_out": "离开时答案或新问题是什么",
-      "character_focus": "此拍由谁承载",
-      "must_keep_moment": "不可替代的动作/表情/台词/声音",
-      "evidence": ["visual", "asr"]
-    }
-  ]
-}
-```
-
-上例是 CREATE 形态。DIRECTED / REVISION 可以只保留用户指定或当前采用的假设；不要复制一个虚假备选来凑数量。
-
-### `visual_audio_board.json`
-
-```json
-{
-  "schema_version": 1,
-  "items": [
-    {
-      "beat_id": "b01",
-      "source_id": "可选，多视频时填写",
-      "source_start": 12.0,
-      "source_end": 20.0,
-      "output_start": null,
-      "output_end": null,
-      "picture_job": "orientation|evidence|performance|reaction|action|contrast",
-      "preferred_moment": "具体要保留的画面时刻",
-      "entry_reason": "为什么从这里进入",
-      "exit_reason": "为什么在这里离开",
-      "audio_owner": "original_dialogue|action_sound|ambience|music|silence|narration",
-      "original_audio_anchor": "要完整保留的对白/动作声/停顿",
-      "narration_job": "none|context|causal_link|foreshadow|interpretation|transition",
-      "handoff": "前后画面、原声与旁白如何接力"
-    }
-  ]
-}
-```
-
-cut 第一阶段先用原片时间写；`edited_source.mp4` 产生后，在第二阶段补上输出时间并重新确认 `audio_owner` / `narration_job`。
-
-## 内容质量基线
-
-进入 TTS 前，以下问题都必须能用具体 beat 回答；否则先改计划或脚本：
-
-1. **承诺**：开头提出的真实问题，结尾是否兑现？
-2. **主线**：是否有一个明确 POV 和一条主导因果/关系线？
-3. **变化**：每个 beat 是否改变知识、权力、目标、关系、情绪或风险？
-4. **人物**：是否保留了至少一个不能由剧情概述替代的表演/反应瞬间？
-5. **视听分工**：每个 beat 是否明确由画面、原声、沉默或旁白中的谁主导？
-6. **必要性**：旁白是否都在增加信息或期待，而不是复述像素？
-7. **完整观看**：实际最终文件是否完整看过、逐接点看过并只听声音检查过？
-
-这套基线与抖音、YouTube 或任何平台数据无关。先让内容本身成立，再讨论标题、封面、时长档位和发布优化。
+通过 `editorial.py --candidate` 后，从同一 story 生成接受稿、`visual_audio_board.json` 与 `editorial_plan.json`。
+模型报告、证据和输入快照随版本保存。失败候选不得覆盖接受稿；修改内容后重新提交与投影，再检查真实配音和成片。

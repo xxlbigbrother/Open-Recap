@@ -80,9 +80,8 @@ def _generate_source_storyboard(
 
 
 def _generate_edited_storyboard(work_dir, source_video_path, *, force=False):
-    """Generate (or reuse cached) the edited storyboard, GATED on clip_plan_validated.json
-    file-presence (NOT on edit_mode — recap.py forwards --edit-mode cut in BOTH passes, so the
-    validated plan presence is the only reliable pass2 signal). Advisory: returns dict|None.
+    """Generate or reuse an edited storyboard only when clip_plan_validated.json exists.
+    An edit-mode request alone supplies no source-to-output mapping. Returns dict|None.
     """
     if not CONFIG.get("storyboard", True):
         return None

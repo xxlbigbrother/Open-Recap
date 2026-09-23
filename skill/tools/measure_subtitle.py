@@ -3,7 +3,7 @@
 
 The tool samples deterministic frames, detects wide bright text-like bands in the
 lower half, writes grid/band previews, and emits ``subtitle_positions.json``.  The
-coordinates can be passed to recap.py with ``--subtitle-y-top/--subtitle-y-bot``.
+coordinates can be used as ``project.json.delivery.subtitle_band: [top, bottom]``.
 """
 
 import argparse
@@ -350,7 +350,7 @@ def main(argv=None):
             raise SystemExit("未检测到可靠字幕带；可增加 --frames 或降低 --start-sec 后重试")
         width, height = int(canvas_width), int(canvas_height)
         suggested_top = round(median(top for top, _ in detections))
-        # Detection/preview bands use inclusive pixel rows; the recap CLI uses [top, bot).
+        # Detection/preview bands use inclusive pixel rows; delivery uses [top, bot).
         suggested_bot = min(height, round(median(bottom for _, bottom in detections)) + 1)
         print(f"检测到字幕帧 {len(detections)}/{args.frames}，预览: {preview_dir}")
         print(f"建议字幕带（半开区间）: y=[{suggested_top}, {suggested_bot})")
@@ -372,8 +372,8 @@ def main(argv=None):
     positions = out_dir / "subtitle_positions.json"
     print(f"最终预览: {out_dir / 'preview'}")
     print(f"坐标文件: {positions}")
-    print(f"使用: python3 skills/video-recap/scripts/recap.py {video} "
-          f"--subtitle-y-top {y_top} --subtitle-y-bot {y_bot}")
+    print(f"写入项目 delivery 配置: subtitle_band: [{y_top}, {y_bot}]，"
+          f"width: {width}, height: {height}")
     return 0
 
 

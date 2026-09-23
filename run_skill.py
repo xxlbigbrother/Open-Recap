@@ -14,10 +14,10 @@ for line in env_file.read_text().splitlines() if env_file.exists() else []:
         name, value = line.split("=", 1)
         env.setdefault(name.strip(), value.strip().strip("\"'"))
 env.setdefault('UNDERSTANDING_PROVIDER', 'aihub-gemini')
-env.update({"VIDEO_RECAP_PROVIDER": "aihub-doubao", "TTS_PROVIDER": "doubao-tts",
+env.update({"VIDEO_RECAP_PROVIDER": "aihub-doubao",
             "PYTHONPATH": str(ROOT), "PATH": str(ROOT / "tools") + os.pathsep + env.get("PATH", ""),
-            "PYTHONDONTWRITEBYTECODE": "1", "NARRATION_SPEED": "1.0", "TTS_DYNAMIC_PARAMS": "false",
-            "SUBTITLE_FONT_SIZE": "76", "SUBTITLE_MAX_CHARS": "22", "TTS_WORKERS": "2", "TTS_RETRIES": "1"})
+            "PYTHONDONTWRITEBYTECODE": "1", "NARRATION_SPEED": "1.0",
+            "SUBTITLE_FONT_SIZE": "76", "SUBTITLE_MAX_CHARS": "22"})
 env.setdefault('VLM_WORKERS', '2')
 args = sys.argv[1:]
 if not args or args[0] in {'-h','--help'}:

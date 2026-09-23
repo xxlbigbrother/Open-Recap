@@ -39,13 +39,11 @@ def test_every_discovered_skill_has_matching_frontmatter_identity():
             assert isinstance(frontmatter["user-invocable"], bool)
 
 
-def test_skill_frontmatter_exposes_only_the_router_and_writing_skill():
+def test_stage_frontmatter_exposes_only_the_writing_skill():
     expected_invocability = {
-        "video-recap": True,
         "video-script": True,
         "video-understanding": False,
         "video-cut": False,
-        "video-voiceover": False,
         "video-assemble": False,
     }
 

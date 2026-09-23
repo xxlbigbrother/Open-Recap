@@ -371,7 +371,7 @@ def _consolidation_model():
 
 def _clean_asr_prompt_fingerprint():
     # Keep this literal in sync with consolidate.CLEAN_PROMPT without importing it;
-    # brief.py and narration.py must remain byte-identical cross-skill copies.
+    # The brief must recognize the same cached cleaning prompt as consolidation.
     prompt = """你在清洗中文视频的 ASR 逐段转写。对【每一段】做：补标点、修明显同音/错别字、（能判断时）在句首轻标说话人，让长段连读文本变成清晰可读的句子。
 铁律：
 - 不要合并或拆分段落，输出段数必须与输入完全一致，顺序一致。

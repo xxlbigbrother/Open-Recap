@@ -28,7 +28,24 @@ python3 scripts/research_film.py --title "功夫" --year 2004 --work-dir <work_d
 5. 把资料与 `vlm_analysis.json` / `asr_result.json` 分开使用：外部资料证明背景，后两者证明当前画面与对白。
 6. 没有可靠来源的信息不进入成稿。搜索不可用时，可以使用用户提供的可靠资料，或者明确省略背景信息；不凭模型记忆补齐。
 
-完成研究与 `opening_brief.json` 后，回到当前创作阶段：先写或更新 `recap_story_plan.json` 与 `visual_audio_board.json`，再进入剪辑计划或 `narration.json`。影片资料用于选择讲述角度和安排知识出现位置，不能绕过这两份创作计划进入文案阶段。
+完成研究后，将采用的事实转成 `stage2_research.json`，并在项目设置 `research_path`。`film_research.json` 和 `opening_brief.json` 不会自动进入正式证据包。
+
+```json
+{
+  "schema_version": 1,
+  "source_id": "本项目源ID",
+  "facts": [{
+    "id": "release-context",
+    "claim": "实际核实的背景事实",
+    "verified": true,
+    "source_url": "实际打开的来源URL",
+    "supporting_excerpt": "必要短引文或可核对位置"
+  }]
+}
+```
+
+`source_id` 必须与项目一致，路径相对项目 JSON 解析；示例文字不是事实。研究变化后重新运行 `editorial.py --prepare-only`，阅读本次 `prepared_dir` 的证据。
+先写 `author_draft.md`，再编排 `recap_story_plan.candidate.json`；研究主张使用 `kind: research` 和本次正式证据 ID，经 `--candidate` 评审后统一投影视听板与执行计划。
 
 ## 按视频类型搜索策略
 

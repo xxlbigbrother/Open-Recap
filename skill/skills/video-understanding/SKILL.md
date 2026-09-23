@@ -21,30 +21,27 @@ description: >
 
 1. **场景检测**：写 `scenes.json`，包含切点、时长和废片段过滤结果。
 2. **抽帧**：为视觉分析提取代表帧。
-3. **ASR**：通过 `mimo-v2.5-asr` 写时间戳对白 `asr_result.json`。
+3. **ASR**：通过运行入口配置的豆包 Seed ASR2.0 写时间戳对白 `asr_result.json`，保留词时间。
 4. **静音检测**：写 `silence_periods.json`，标注安静窗口与 `has_speech`。
 5. **VLM 观察**：写 `vlm_analysis.json`，包含场景描述、深层分析和 `frame_facts`。
-6. **时间线融合与创作 brief**：写 `timeline_fusion.json`、`asr_writing_chunks.json` 和 `agent_narration_brief.md`。
+6. **全局索引、时间线融合与创作 brief**：写 `understanding_index.json`、`timeline_fusion.json`、`asr_writing_chunks.json` 和 `agent_narration_brief.md`。
 
 各阶段只有在输出产物与 provenance sidecar 同时匹配当前视频及影响结果的设置时才会复用；`--force` 强制重算。
 
 ## 3. 环境要求
 
-```bash
-# ffmpeg: brew install ffmpeg | apt install ffmpeg | choco install ffmpeg
-export MIMO_API_KEY=***
-```
+需要 Python、FFmpeg/ffprobe 与模型配置。在 OpenRecap 包中，从根运行入口调用本阶段：视觉与全局索引默认 Gemini3.8 Flash，转写默认豆包 Seed ASR2.0。新 AIHub 的 `AIHUB_API_KEY` 用于 Gemini，旧站的 `APP_ID` / `APP_KEY` 用于豆包，凭证通过环境或私有配置文件读取。
 
-ASR 使用 `mimo-v2.5-asr`；VLM 使用 `mimo-v2.5`。`--skip-asr` 可跳过对白转写，但完整理解仍需要 `MIMO_API_KEY` 运行 VLM。`--mimo-video-overview` 可开启按场景块的视频概览。
+`--skip-asr` 可跳过对白转写；`--mimo-video-overview` 是保留的可选概览参数，不用于选择本包默认模型。直接运行底层脚本会使用底层默认配置，不能代替根运行入口。
 
 若 `work_dir/background_research.json` 存在，本技能会把剧情梗概和角色名折入 VLM 上下文；`--context` 可补充一条简短提示。
 
-下面的 `scripts/...` 均相对于本技能目录。若执行器从仓库根目录启动，请给脚本路径加上本技能的绝对目录。脚本不从其他技能目录读取文件；外部输入仅限命令显式传入的视频、参数与 `work_dir` 产物。
+本阶段脚本位于本技能的 `scripts/`，下方命令从 OpenRecap 包根目录运行。脚本不从其他技能目录读取文件；外部输入仅限命令显式传入的视频、参数与 `work_dir` 产物。
 
 ## 4. 运行命令
 
 ```bash
-python3 scripts/understand.py <video> --work-dir <work_dir> \
+python3 run_skill.py video-understanding understand.py <video> --work-dir <work_dir> \
   [--context "节目名/角色名"] [--scene-threshold 0.1] [--skip-asr] [--mimo-video-overview] [--force]
 ```
 
@@ -56,11 +53,12 @@ python3 scripts/understand.py <video> --work-dir <work_dir> \
 | `asr_result.json` | `[{start, end, text}]` 时间戳对白 |
 | `vlm_analysis.json` | 逐场景描述、深层分析与 `frame_facts` |
 | `silence_periods.json` | `[{start, end, duration, has_speech}]` 安静窗口 |
+| `understanding_index.json` | 全局人物、关系与剧情索引 |
 | `timeline_fusion.json` | VLM、ASR 与静音信息的统一时间线 |
 | `asr_writing_chunks.json` | 按句界和场景切分的 ASR 写作块 |
 | `agent_narration_brief.md` | Agent 首先阅读的创作简报 |
 
-后续写作阶段根据创作简报与索引制定方案并写 `narration.json`。
+后续创作根据简报与索引写连续稿，再编排带证据的故事计划。
 
 ## 6. 参考资料
 

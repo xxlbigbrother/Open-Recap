@@ -14,6 +14,7 @@ import hashlib
 import json
 
 from lib import CONFIG
+from timeline_fusion import _build_timeline_fusion
 from agent_brief import build_agent_brief
 from agent_text import _chunk_asr_for_writing
 from brief_context import (
@@ -485,3 +486,38 @@ def test_index_prompt_fingerprint_tracks_consolidate_source_of_truth():
     assert _index_prompt_fingerprint() == consolidate._prompt_fingerprint(
         consolidate.INDEX_PROMPT
     )
+
+
+def test_timeline_fusion_aligns_scenes_dialogue_and_quiet_slots():
+    fusion = _build_timeline_fusion(
+        [
+            {
+                "scene_id": 0,
+                "start": 0.0,
+                "end": 10.0,
+                "description": "对峙",
+                "frame_facts": {"1.0": ["看门"]},
+            }
+        ],
+        [
+            {"start": 2.0, "end": 4.0, "text": "你到底是谁"},
+            {"start": 8.0, "end": 12.0, "text": "跨场对白"},
+        ],
+        [
+            {"start": 0.0, "end": 1.0, "duration": 1.0, "has_speech": False},
+            {"start": 5.0, "end": 7.0, "duration": 2.0, "has_speech": False},
+            {"start": 9.0, "end": 9.5, "duration": 0.5, "has_speech": True},
+        ],
+    )
+
+    item = fusion[0]
+    assert item["dialogue_overlap_seconds"] == 4.0
+    assert [seg["text"] for seg in item["dialogue_segments"]] == [
+        "你到底是谁",
+        "跨场对白",
+    ]
+    assert [(slot["start"], slot["end"]) for slot in item["narration_slots"]] == [
+        (0.0, 1.0),
+        (5.0, 7.0),
+    ]
+    assert item["frame_facts"] == {"1.0": ["看门"]}

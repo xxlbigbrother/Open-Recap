@@ -55,13 +55,15 @@ smoke_understanding.py   新目录短片验证
 editorial_render.py      配音、时间编译和合成
 gemini_adapter.py        Gemini理解接口
 aihub_adapter.py         豆包ASR/审稿/语音接口
-skill/skills/            六个阶段的脚本与参考
+skill/skills/            理解、写稿、画面呈现、合成四个阶段
 references/              风格和模型配置
 tests/                   本地适配测试
 skill/tests/             分阶段行为测试
 ```
 
 底层阶段按独立目录保留，以避免同名模块相互污染。应从根入口运行，直接调用阶段脚本可能绕过本项目模型配置。
+
+当前工作流由根`SKILL.md`引导，配音和渲染使用`editorial_render.py`。上游旧的一键编排、独立配音和先裁片再写稿入口已移除；完整命令以本项目[怎么运行](怎么运行.md)为准。
 
 ## 测试
 

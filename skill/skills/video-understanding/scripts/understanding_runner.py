@@ -317,9 +317,8 @@ def main():
         )
 
     # Storyboard contact sheets (advisory, never blocking). Source uses scene anchors over the
-    # source timeline; edited is gated on clip_plan_validated.json file-presence (NOT edit_mode —
-    # recap.py forwards --edit-mode cut in BOTH passes, so the validated plan is the only reliable
-    # pass2 signal). Both cache via _write_stage_meta/_stage_cache_valid with fps + frame-set in the key.
+    # source timeline; edited requires an explicit validated plan. Both cache via
+    # _write_stage_meta/_stage_cache_valid with fps + frame-set in the key.
     source_storyboard = _generate_source_storyboard(
         work_dir, Path(video), scenes, scenes_json, force=args.force
     )

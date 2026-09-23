@@ -389,10 +389,10 @@ def _clip_plan_clips(clip_plan_validated):
 
 
 def _source_to_output(source_time, clip):
-    """Forward affine source→output map for ONE clip (reimplements cut.py:319 locally).
+    """Forward affine source→output map for one validated clip.
 
     output = clip.output_start + (src − clip.source_start), clamped to [output_start, output_end].
-    Read the authoritative numbers from clip_plan_validated.json; do NOT import cut.py.
+    Read the authoritative numbers from clip_plan_validated.json.
     """
     src = float(source_time)
     out_start = float(clip["output_start"])

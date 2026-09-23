@@ -1,12 +1,4 @@
-"""Cross-skill contract for the full-file fingerprint helpers.
-
-Each independently shipped skill keeps the same sha256-over-content behavior. A change
-to one could silently diverge — and cache provenance is compared ACROSS skills: video-cut writes
-`edited_source.mp4.meta.json`, video-recap reads it, video-assemble fingerprints the
-same source again. A divergence there degrades into cache misses or, worse, false
-cache hits. These tests hold the implementations to one behaviour and ensure the recap
-orchestrator reuses its skill-local materials implementation instead of duplicating it.
-"""
+"""Cache fingerprints must stay content-addressed across retained stage consumers."""
 import importlib.util
 import os
 from pathlib import Path
@@ -18,22 +10,18 @@ ROOT = Path(__file__).resolve().parents[2]
 # (module path, attribute name) for every full-content fingerprint helper in the bundle.
 FINGERPRINT_IMPLEMENTATIONS = (
     ("skills/video-assemble/scripts/artifacts.py", "_file_fingerprint"),
-    ("skills/video-cut/scripts/cut_contract.py", "file_fingerprint"),
-    ("skills/video-recap/scripts/materials.py", "file_fingerprint"),
-    ("skills/video-script/scripts/lib.py", "file_fingerprint"),
     ("skills/video-understanding/scripts/lib.py", "file_fingerprint"),
-    ("skills/video-voiceover/scripts/lib.py", "file_fingerprint"),
 )
 
 
 def _load(rel_path, index):
     """Import one skill module under a unique name, in its own module namespace.
 
-    Every skill ships its own top-level `lib` (and `narration`, ...), which is exactly why
+    Every skill ships its own top-level `lib` , which is exactly why
     the suite runs one pytest process per skill. Loading several here would otherwise
     resolve `from lib import ...` against whichever skill got imported first. So each load
     gets a clean sys.modules for the bare skill-local names, restored afterwards, letting
-    this one cross-cutting test legitimately see all seven implementations at once.
+    this one cross-cutting test legitimately see all retained implementations at once.
     """
     import sys
 
@@ -134,30 +122,3 @@ def test_memo_key_includes_size_and_mtime(implementations, tmp_path):
         identity = module._file_identity(target)
         stat = os.stat(target)
         assert identity == (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns), rel
-
-
-def test_recap_runtime_reuses_materials_fingerprint(monkeypatch, tmp_path):
-    runtime = _load("skills/video-recap/scripts/recap_runtime.py", "runtime")
-    assert not hasattr(runtime, "_file_fingerprint")
-
-    sample = tmp_path / "recap-source.bin"
-    sample.write_bytes(b"shared recap fingerprint")
-    monkeypatch.setattr(runtime.material_lib, "file_fingerprint", lambda path: f"shared:{path}")
-    assert runtime._run_manifest_payload(
-        sample,
-        type(
-            "Args",
-            (),
-            {
-                "context": None,
-                "scene_threshold": 0.3,
-                "style": None,
-                "edit_mode": "full",
-                "target_duration": None,
-                "skip_asr": False,
-                "mimo_video_overview": False,
-                "consolidate": False,
-                "consolidate_asr": False,
-            },
-        )(),
-    )["source_video_fingerprint"] == f"shared:{sample}"

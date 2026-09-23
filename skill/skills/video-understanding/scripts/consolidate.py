@@ -10,7 +10,7 @@ Optional, synchronous, in-pipeline. Two independent LLM passes over the video's 
     cleanup pass can never shift the timing-bearing spans downstream chunking depends on.
 
 Both passes degrade gracefully (a chat-API failure logs and is skipped) and are idempotent
-(a fresh artifact is reused). Mirrors review.py's pure-seam + thin-driver shape so it is
+(a fresh artifact is reused). Keeps pure logic separate from the driver so it is
 unit-testable with a mocked api_call. NON-required: the pipeline runs unchanged without it.
 """
 

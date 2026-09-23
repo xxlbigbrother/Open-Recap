@@ -6,12 +6,12 @@
 
 1. 准备项目JSON，运行 `editorial.py --prepare-only`。阅读输出的 `evidence_bundle.json` 与 `style_snapshot.json`，核对源身份和时间线。参考案例只提供讲述方法，目标影片事实只能来自本项目证据。
 2. 先写 `author_draft.md`：连续口述、原声任务、信息揭示及每段返回剧情的出口。知识或暂停没有增量时，选择继续播放。不能因模型有暂停能力就每隔一段暂停。
-3. 再将稿件与画面共同编排为 `recap_story_plan.json`。形态遵循 `scripts/editorial_prompts.py` 的 `STORY_SHAPE`；完整字段定义和校验见 `scripts/editorial_contract.py`。段落可以是纯原声，`narration: null`；一段旁白不能同时盖住自己声明保护的原声。
+3. 再将稿件与画面共同编排为 `recap_story_plan.candidate.json`。形态遵循 `scripts/editorial_prompts.py` 的 `STORY_SHAPE`；完整字段定义和校验见 `scripts/editorial_contract.py`。段落可以是纯原声，`narration: null`；一段旁白不能同时盖住自己声明保护的原声。
 4. 离线验证必须用 `load_project` → `build_evidence` → `load_style` 重建输入，再运行 `validate_story(story, project, evidence, style)`。不要另写一套加载器或只往临时evidence_bundle里加入截图ID；新增目视观察先存入project引用的verified_notes，再用正式入口复核。解决具体问题。把每个主张的证据、问答回收、旁白有效窗口写实；不要删约束来过关。
 5. 用 `editorial.py --candidate` 验证并做一次模型语义评审。此模式不自动改Agent稿。通过后统一投影为视听板与执行计划，记录 `authoring_origin=agent_candidate`。
 6. 采用实际配音长度调用呈现编译；装不下时改完整口述或有价值的呈现，不额外提速、截尾或移到无关画面。最后检查真实画面、原声交接和字幕，分别报告技术通过与看片范围。
 
-普通剧情概述不必走此路径；本路径服务参考驱动的重看/精讲创作。`editorial.py` 不代替Agent的观看与判断。
+这是当前包的标准创作路径；讲述详略和风格由项目与用户约定决定。`editorial.py` 不代替Agent的观看与判断。
 
 ## 项目输入
 
@@ -41,14 +41,14 @@
 
 ## 命令
 
-下列路径为调用者提供的实际文件，命令从技能目录运行：
+下列路径为调用者提供的实际文件，命令从包根运行：
 
 ```bash
-python3 scripts/editorial.py --project /path/project.json --work-dir /path/work --prepare-only
-python3 scripts/editorial.py --project /path/project.json --work-dir /path/work --candidate /path/recap_story_plan.json
+python3 run_skill.py video-script editorial.py --project /path/project.json --work-dir /path/work --prepare-only
+python3 run_skill.py video-script editorial.py --project /path/project.json --work-dir /path/work --candidate /path/recap_story_plan.candidate.json
 ```
 
-配置现有provider后即可评审；豆包适配项目继续使用项目级 `run_skill.py video-script editorial.py ...` 入口。
+通过包根入口使用当前项目的模型路由进行评审。
 
 省略 `--candidate` 可做直接模型生成实验。`authoring_mode:write_then_plan` 会先生成口述草稿，再编排；`authoring_draft_path` 可复用已有草稿。**当前真实实验中，固定次数的自动生成仍会失败，尤其是长稿与事件时序冲突；不能把该模式默认为稳定成片能力。** 失败停在 `needs_review`，保留每轮产物，不进配音，也不无限重试。
 

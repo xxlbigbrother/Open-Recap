@@ -16,7 +16,7 @@ SKILL_NAMES = tuple(
     for path in sorted(SKILLS_ROOT.iterdir())
     if path.is_dir() and (path / "SKILL.md").is_file()
 )
-STAGE_SKILL_NAMES = tuple(name for name in SKILL_NAMES if name != "video-recap")
+STAGE_SKILL_NAMES = SKILL_NAMES
 
 
 def _skill_path(skill_name: str) -> Path:
@@ -33,16 +33,6 @@ def _markdown_headings_outside_fences(text: str, prefix: str) -> list[str]:
         if not in_fence and line.startswith(prefix):
             headings.append(line)
     return headings
-
-
-def _markdown_section(text: str, heading: str) -> str:
-    lines = text.splitlines()
-    start = lines.index(heading) + 1
-    end = next(
-        (index for index in range(start, len(lines)) if lines[index].startswith("## ")),
-        len(lines),
-    )
-    return "\n".join(lines[start:end])
 
 
 def _json_fences(path: Path) -> list[dict | list]:
@@ -67,164 +57,10 @@ def test_all_skill_headings_are_sequential_numbered_chinese():
         assert numbers == list(range(1, len(numbers) + 1)), (skill_name, numbers)
 
 
-def test_creative_roles_and_artifact_examples_form_a_structured_contract():
-    recap_text = _skill_path("video-recap").read_text(encoding="utf-8")
-    recap_roles = re.findall(
-        r"(?m)^\d+\. \*\*([^*]+)\*\*[：:]",
-        _markdown_section(recap_text, "## 2. 创作职责"),
-    )
-    assert recap_roles == ["导演判断", "故事编辑", "画面剪辑", "声音/旁白", "观众复核"]
-
-    script_text = _skill_path("video-script").read_text(encoding="utf-8")
-    script_roles = re.findall(
-        r"(?m)^\d+\. ([^\n]+)$",
-        _markdown_section(script_text, "## 1. 定位"),
-    )
-    assert script_roles == ["导演", "故事编辑", "画面剪辑师", "声音/旁白编辑", "第一次观看的观众"]
-
-    for skill_name in ("video-recap", "video-script"):
-        playbook = ROOT / "skills" / skill_name / "references" / "creative-editing-playbook.md"
-        examples = _json_fences(playbook)
-        story_plan = next(item for item in examples if isinstance(item, dict) and "director_intent" in item)
-        av_board = next(item for item in examples if isinstance(item, dict) and "items" in item)
-
-        assert story_plan["schema_version"] == 1
-        assert len(story_plan["hypotheses"]) >= 2
-        assert story_plan["chosen_hypothesis"] in {item["id"] for item in story_plan["hypotheses"]}
-        assert {
-            "viewer_promise",
-            "pov",
-            "dramatic_question",
-            "emotional_start",
-            "emotional_end",
-            "ending_aftertaste",
-            "withhold_reveal",
-        } <= set(story_plan["director_intent"])
-        assert {"beat_id", "function", "change", "must_keep_moment", "evidence"} <= set(story_plan["beats"][0])
-
-        board_item = av_board["items"][0]
-        assert av_board["schema_version"] == 1
-        assert {"beat_id", "preferred_moment", "entry_reason", "exit_reason", "audio_owner", "narration_job"} <= set(board_item)
-        assert set(board_item["audio_owner"].split("|")) == {
-            "original_dialogue",
-            "action_sound",
-            "ambience",
-            "music",
-            "silence",
-            "narration",
-        }
-        assert set(board_item["narration_job"].split("|")) == {
-            "none",
-            "context",
-            "causal_link",
-            "foreshadow",
-            "interpretation",
-            "transition",
-        }
-
-
-def test_research_guides_match_their_own_stage_timing():
-    recap_guide = (SKILLS_ROOT / "video-recap" / "references" / "research-guide.md").read_text(encoding="utf-8")
-    script_guide = (SKILLS_ROOT / "video-script" / "references" / "research-guide.md").read_text(encoding="utf-8")
-
-    assert "开始视频理解**之前**" in recap_guide
-    assert "继续视频理解" in recap_guide
-    assert "继续写 `narration.json`" not in recap_guide
-    assert "直接写解说词" not in recap_guide
-    assert "不会自动重跑或改写已有 VLM / ASR 产物" in script_guide
-    assert "`context-only`" in script_guide
-    assert "开始视频理解**之前**" not in script_guide
-    assert "回到当前创作阶段" in script_guide
-    assert "`recap_story_plan.json`" in script_guide
-    assert "`visual_audio_board.json`" in script_guide
-    assert "直接写解说词" not in script_guide
-
-
-def test_dense_scene_cut_policy_distinguishes_source_and_edit_created_cuts():
-    for skill_name in ("video-recap", "video-script"):
-        playbook = (
-            SKILLS_ROOT
-            / skill_name
-            / "references"
-            / "creative-editing-playbook.md"
-        ).read_text(encoding="utf-8")
-        assert "select='gt(scene,0.35)',showinfo" in playbook
-        assert "原片切点" in playbook
-        assert "本次剪辑制造的切点" in playbook
-        assert "多保留真实源素材" in playbook
-        assert "不能用来遮掩坏接点" in playbook
-
-    cut_skill = _skill_path("video-cut").read_text(encoding="utf-8")
-    assert "select='gt(scene,0.35)',showinfo" in cut_skill
-    assert "原片自带的无关短镜头整段删除" in cut_skill
-    assert "由本次拼接制造的切点" in cut_skill
-
-    for skill_name in ("video-understanding", "video-script"):
-        brief = (
-            SKILLS_ROOT / skill_name / "scripts" / "agent_brief.py"
-        ).read_text(encoding="utf-8")
-        assert "Inspect dense scene-change candidates" in brief
-        assert "restore same-source motion" in brief
-
-
-def test_deslop_qc_schema_keeps_template_transitions_advisory():
-    marker = "模板化“不是……而是……”转折"
-    for schema_path in (
-        SKILLS_ROOT / "video-recap" / "references" / "data-schema.md",
-        SKILLS_ROOT / "video-understanding" / "references" / "data-schema.md",
-    ):
-        lines = schema_path.read_text(encoding="utf-8").splitlines()
-        blocker_line = next(line for line in lines if line.startswith("- `blockers`："))
-        advisory_line = next(line for line in lines if line.startswith("- `advisories`："))
-
-        assert marker not in blocker_line, schema_path
-        assert marker in advisory_line, schema_path
-
-
-def test_skill_json_examples_are_parseable_and_cut_reason_keeps_editorial_fields():
+def test_all_stage_markdown_json_examples_are_parseable():
     for skill_name in SKILL_NAMES:
-        _json_fences(_skill_path(skill_name))
-
-    cut_example = _json_fences(_skill_path("video-cut"))[0]
-    reason_parts = [part.strip() for part in cut_example["reason"].split("|")]
-
-    assert len(reason_parts) == 7
-    assert reason_parts[0].startswith("b")
-    assert "→" in reason_parts[2]
-    assert reason_parts[3].startswith("POV=")
-    assert reason_parts[-2].startswith("入点=")
-    assert reason_parts[-1].startswith("出点=")
-
-    def nested_items(value):
-        if isinstance(value, dict):
-            yield value
-            for child in value.values():
-                yield from nested_items(child)
-        elif isinstance(value, list):
-            for child in value:
-                yield from nested_items(child)
-
-    for schema_path in (
-        SKILLS_ROOT / "video-recap" / "references" / "data-schema.md",
-        SKILLS_ROOT / "video-understanding" / "references" / "data-schema.md",
-    ):
-        displayed_clips = [
-            item
-            for example in _json_fences(schema_path)
-            for item in nested_items(example)
-            if "reason" in item
-            and (
-                {"start", "end"} <= set(item)
-                or {"source_start", "source_end"} <= set(item)
-            )
-        ]
-        assert displayed_clips, schema_path
-        for clip in displayed_clips:
-            parts = [part.strip() for part in clip["reason"].split("|")]
-            assert len(parts) == 7, (schema_path, clip)
-            assert parts[0].startswith("b") and "→" in parts[2]
-            assert parts[3].startswith("POV=")
-            assert parts[-2].startswith("入点=") and parts[-1].startswith("出点=")
+        for markdown_path in (SKILLS_ROOT / skill_name).rglob("*.md"):
+            _json_fences(markdown_path)
 
 
 def test_markdown_references_are_local_and_resolve_inside_each_skill():
@@ -241,11 +77,14 @@ def test_markdown_references_are_local_and_resolve_inside_each_skill():
                     pytest.fail(f"{markdown_path}: reference escapes its skill: {reference}")
                 assert resolved.is_file(), (markdown_path, reference)
 
-            # A bare script name such as `review.py` still denotes an implementation
-            # reference. It must resolve in this skill's own scripts directory rather
-            # than silently relying on a sibling with a matching filename.
+            # Resolve implementation references locally, except explicit package entries.
             for script_name in re.findall(r"`([A-Za-z0-9_.-]+\.py)`", text):
-                assert (skill_dir / "scripts" / script_name).is_file(), (markdown_path, script_name)
+                # OpenRecap stage docs may name the package's two integration entries.
+                if script_name in {"run_skill.py", "editorial_render.py"}:
+                    target = ROOT.parent / script_name
+                else:
+                    target = skill_dir / "scripts" / script_name
+                assert target.is_file(), (markdown_path, script_name)
 
 
 def test_stage_sources_never_point_to_a_sibling_skill_path():

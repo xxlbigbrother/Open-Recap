@@ -1,11 +1,4 @@
-"""Audio policy must agree wherever it is actually consumed.
-
-Previously every skill declared the full ~30-key audio policy and this file asserted all
-five copies matched. That parity was circular: the keys only needed to agree because
-lib.py had been copied, and most skills never read them. Now a skill declares a knob only
-if its own code reads it, so parity is asserted over the real overlap — which is where a
-divergence could actually change a rendered recap.
-"""
+"""Configuration belongs to the retained stage that actually consumes it."""
 import ast
 import importlib.util
 from pathlib import Path
@@ -15,52 +8,9 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 LIBS = {
     "assemble": ROOT / "skills/video-assemble/scripts/lib.py",
-    "voiceover": ROOT / "skills/video-voiceover/scripts/lib.py",
     "script": ROOT / "skills/video-script/scripts/lib.py",
-    "recap": ROOT / "skills/video-recap/scripts/lib.py",
     "understanding": ROOT / "skills/video-understanding/scripts/lib.py",
 }
-
-# Knobs that shape the rendered audio. A skill is held to these only if it declares them,
-# i.e. only if its own code reads them — see test_audio_policy_keys_are_declared_where_read.
-# Exactly the inputs narration_tempo_budget() reads. A skill that carries these must
-# compute the same cap from them, because voiceover and assemble both enforce it.
-TEMPO_KEYS = (
-    "narration_speed",
-    "narration_cumulative_tempo_max",
-    "narration_cumulative_tempo_hard_max",
-    "tts_segment_tempo_max",
-)
-MIX_KEYS = (
-    "fade_ms",
-    "ducking_mode",
-    "ducking_threshold",
-    "ducking_ratio",
-    "ducking_attack",
-    "ducking_release",
-    "ducking_level_sc",
-    "ducking_makeup",
-    "ducking_narr_weight",
-    "ducking_orig_volume",
-    "zone_ducking_volume",
-    # `zone_fade_seconds` used to sit here. It was declared in all five lib.py copies and
-    # read by nothing in the entire repository — kept alive only by the old blanket parity
-    # assertion, which proved the copies agreed without anyone consuming the value.
-    "idle_orig_volume",
-    "duck_fade_seconds",
-    "bgm_volume",
-    "bgm_ducking_volume",
-    "speech_ducking_volume",
-    "final_loudnorm",
-    "target_lufs",
-    "target_true_peak",
-    "target_lra",
-    "final_limiter_peak",
-    "tts_segment_normalize",
-    "tts_segment_target_rms_dbfs",
-    "tts_segment_peak_limit",
-)
-
 
 def _load_lib(name, path):
     spec = importlib.util.spec_from_file_location(f"audio_policy_{name}_lib", path)
@@ -100,32 +50,6 @@ def _readable_source(path, *, include_lib=True):
             )
         )
     return "\n".join(parts)
-
-
-@pytest.mark.parametrize("key", TEMPO_KEYS + MIX_KEYS)
-def test_audio_policy_value_agrees_across_every_skill_that_declares_it(libs, key):
-    declarers = {name: lib for name, lib in libs.items() if key in lib.CONFIG}
-    assert declarers, f"no skill declares {key!r} any more; drop it from this contract"
-    values = {name: lib.CONFIG[key] for name, lib in declarers.items()}
-    assert len(set(map(repr, values.values()))) == 1, f"{key} diverged: {values}"
-
-
-def test_tempo_budget_helper_agrees_wherever_the_tempo_knobs_are_declared(libs):
-    """narration_tempo_budget turns the tempo knobs into the cap voiceover and assemble both
-    enforce. Any skill carrying those knobs must compute the same budget from them."""
-    declarers = {
-        name: lib
-        for name, lib in libs.items()
-        if all(key in lib.CONFIG for key in TEMPO_KEYS)
-    }
-    assert {"assemble", "voiceover"} <= set(declarers), (
-        "assemble and voiceover both enforce the tempo budget and must declare its inputs"
-    )
-    for offset in (-0.05, 0.0, 0.05, 0.08):
-        expected = declarers["assemble"].narration_tempo_budget(offset)
-        for name, lib in declarers.items():
-            assert hasattr(lib, "narration_tempo_budget"), name
-            assert lib.narration_tempo_budget(offset) == expected, name
 
 
 def test_visual_qc_delivery_boundary_fields_are_not_audio_policy_keys(libs):

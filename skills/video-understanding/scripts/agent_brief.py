@@ -1,8 +1,5 @@
 """Build the agent narration brief from validated local evidence."""
 
-import importlib.util
-
-
 from pathlib import Path
 
 from lib import CONFIG
@@ -45,18 +42,6 @@ from timeline_fusion import (
     _scene_asr_lines,
 )
 
-try:
-    from deslop_qc import analyze_deslop_qc
-except ModuleNotFoundError:
-    _deslop_qc_path = Path(__file__).with_name("deslop_qc.py")
-    _deslop_qc_spec = importlib.util.spec_from_file_location(
-        "deslop_qc", _deslop_qc_path
-    )
-    if _deslop_qc_spec is None or _deslop_qc_spec.loader is None:
-        raise
-    _deslop_qc_module = importlib.util.module_from_spec(_deslop_qc_spec)
-    _deslop_qc_spec.loader.exec_module(_deslop_qc_module)
-    analyze_deslop_qc = _deslop_qc_module.analyze_deslop_qc
 
 
 def build_agent_brief(

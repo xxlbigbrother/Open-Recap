@@ -1,6 +1,0 @@
-{
-  "source": "upstream:zenstory-ai/video-recap-skills",
-  "repo": "zenstory-ai/video-recap-skills",
-  "commit": "2b63290c41dbdec9f332062e7532d2f4c26e481c",
-  "adaptation": "OpenRecap commentary: Gemini understanding default, Doubao ASR/editorial, explicit Doubao or MiMo TTS"
-}

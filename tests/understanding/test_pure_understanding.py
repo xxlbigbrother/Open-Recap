@@ -28,7 +28,6 @@ from lib import (
     get_video_duration,
     is_mimo_token_plan_key,
     normalize_api_url,
-    step_cache_key,
 )
 from vlm import (
     _mimo_video_chunks,
@@ -230,7 +229,7 @@ def test_mimo_video_overview_embeds_small_local_chunk(monkeypatch, tmp_path):
     assert data_url.startswith("data:video/mp4;base64,")
 
 
-def test_content_fingerprint_cache_keys_ignore_path_and_mtime(tmp_path):
+def test_content_fingerprint_ignores_path_and_mtime(tmp_path):
     first = tmp_path / "a.mp4"
     second = tmp_path / "nested" / "b.mp4"
     second.parent.mkdir()
@@ -238,12 +237,6 @@ def test_content_fingerprint_cache_keys_ignore_path_and_mtime(tmp_path):
     second.write_bytes(first.read_bytes())
 
     assert file_fingerprint(first) == file_fingerprint(second)
-    assert step_cache_key(first, "vlm", {"model": "x"}) == step_cache_key(
-        second, "vlm", {"model": "x"}
-    )
-    assert step_cache_key(first, "vlm", {"model": "x"}) != step_cache_key(
-        first, "vlm", {"model": "y"}
-    )
 
 
 def test_content_fingerprint_detects_middle_only_changes(tmp_path):

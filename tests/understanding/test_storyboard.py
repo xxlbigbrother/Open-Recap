@@ -4,6 +4,7 @@ produced when no font is available, and any failure degrades to None without blo
 """
 
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -440,19 +441,24 @@ def test_edited_storyboard_skipped_without_validated_plan(tmp_path):
     assert understand._generate_edited_storyboard(tmp_path, "video.mp4") is None
 
 
-def test_brief_header_branches_on_labels_burned(tmp_path):
+@pytest.mark.parametrize("timeline,sidecar,time_field", [
+    ("source", "source_storyboard.json", "timestamp"),
+    ("output", "edited_storyboard.json", "source_timestamp"),
+])
+def test_brief_header_links_existing_time_metadata_when_labels_missing(tmp_path, timeline, sidecar, time_field):
     brief = tmp_path / "agent_narration_brief.md"
     brief.write_text("# body\n", encoding="utf-8")
-    source = {
-        "page_images": ["storyboard/source_storyboard.jpg"],
-        "labels_burned": False,
-    }
-    understand._prepend_storyboard_brief_header(brief, source, None, cut_mode=False)
+    metadata = tmp_path / "storyboard" / sidecar
+    metadata.parent.mkdir()
+    metadata.write_text(json.dumps({"timeline": timeline, "tiles": [{time_field: 12.5}]}))
+    board = {"page_images": [str(metadata.with_suffix(".jpg"))], "labels_burned": False}
+    source, edited = (board, None) if timeline == "source" else (None, board)
+    understand._prepend_storyboard_brief_header(brief, source, edited, cut_mode=timeline == "output")
     text = brief.read_text(encoding="utf-8")
-    assert "Storyboard" in text
-    assert "先看 storyboard 再写" in text
-    assert "inspect clip-map" in text  # labels not burned → point to clip-map
-    assert text.rstrip().endswith("# body")  # original body preserved at the end
+    links = re.findall(r"\]\(([^)]+\.json)\)", text)
+    assert links, "Missing labels must lead readers to existing timing metadata"
+    assert [json.loads((brief.parent / link).read_text())["tiles"][0][time_field] for link in links] == [12.5]
+    assert text.rstrip().endswith("# body")
 
 
 def test_brief_header_cut_mode_lists_both_timelines(tmp_path):
@@ -469,7 +475,7 @@ def test_brief_header_cut_mode_lists_both_timelines(tmp_path):
     understand._prepend_storyboard_brief_header(brief, source, edited, cut_mode=True)
     text = brief.read_text(encoding="utf-8")
     assert "源时间线" in text and "output" in text
-    assert "inspect clip-map" not in text  # labels burned → no fallback note
+    assert "](" not in text  # labels are visible; no metadata fallback needed
 
 
 # ── optional real-ffmpeg tile smoke test (skipped when ffmpeg absent) ─────────

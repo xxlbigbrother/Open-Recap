@@ -7,8 +7,7 @@ from pathlib import Path
 from lib import CONFIG, file_fingerprint, stable_hash
 from brief_context import _clean_asr_prompt_fingerprint, _consolidation_model
 
-# Shared with consolidate.py, which this byte-identical copy cannot import (the sibling
-# skill ships no consolidate.py). Keep both literals in sync.
+# Match consolidation's timestamp tolerance when accepting cleaned ASR segments.
 _ASR_SPAN_TOL = 0.05
 
 _MIMO_REJECTION_MARKERS = (

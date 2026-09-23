@@ -1,5 +1,4 @@
-"""Self-contained config + utilities for this skill (no cross-skill imports).
-Merged from the shared core; reads the same env vars as the rest of the bundle."""
+"""Understanding configuration, media helpers and model transport."""
 import json
 import hashlib
 import math
@@ -25,7 +24,6 @@ MIMO_TOKEN_PLAN_API_URLS = {
 }
 DEFAULT_MIMO_MODEL = "mimo-v2.5"          # VLM / chat (vision understanding)
 DEFAULT_MIMO_ASR_MODEL = "mimo-v2.5-asr"  # speech-to-text
-DEFAULT_MIMO_TTS_MODEL = "mimo-v2.5-tts"  # text-to-speech
 
 
 def normalize_api_url(raw_url):
@@ -96,8 +94,8 @@ def env_float(name, default, *, minimum=None):
     return _env_number(name, default, float, minimum)
 
 
-# Single MiMo credential powers ASR + VLM + TTS. Per-capability overrides
-# (MIMO_VIDEO_API_KEY / MIMO_TTS_API_KEY / MIMO_ASR_API_KEY and their *_API_URL forms)
+# MiMo fallback credentials support separate video and ASR overrides
+# (MIMO_VIDEO_API_KEY / MIMO_ASR_API_KEY and their *_API_URL forms)
 # are optional and fall back to MIMO_API_KEY / MIMO_API_URL. Token-Plan keys (tp-*) auto-
 # route to the Token-Plan cluster base URL; pay-as-you-go keys use api.xiaomimimo.com.
 _mimo_api_key = os.environ.get("MIMO_API_KEY", "")
@@ -297,17 +295,7 @@ def file_fingerprint(path, chunk_size=1024 * 1024):
     digest = h.hexdigest()
     _FILE_FINGERPRINT_MEMO[key] = digest
     return digest
-def video_fingerprint(video_path):
-    """Full video content fingerprint used as the root pipeline asset print."""
-    return file_fingerprint(video_path)
 
-def step_cache_key(video_path, step_name, params_fingerprint=""):
-    """Build a cache key from video content, step name and step parameters."""
-    params_digest = params_fingerprint
-    if not isinstance(params_digest, str):
-        params_digest = stable_hash(params_digest)
-    payload = f"{video_fingerprint(video_path)}_{step_name}_{params_digest}"
-    return hashlib.md5(payload.encode("utf-8")).hexdigest()
 
 def _retry_after_seconds(value, fallback):
     """Parse Retry-After seconds or HTTP-date; return fallback on malformed input."""

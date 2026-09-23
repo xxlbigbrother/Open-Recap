@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Cross-platform test runner: one isolated pytest process per skill group.
 
-Each skill ships its OWN lib.py (the bundle has no shared code), so a single
-`pytest tests/` would import several skills' modules into one process and collide
-on the `lib` module name. Run one group per subprocess instead.
+Several stages use skill-local lib.py modules. Collecting all tests in one process
+would mix those modules, so run each group in its own subprocess.
 
 Works on macOS, Linux, and Windows (the bash equivalent is scripts/test.sh).
 

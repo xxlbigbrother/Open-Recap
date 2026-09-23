@@ -9,14 +9,10 @@ from pathlib import Path
 
 from lib import CONFIG, log
 from agent_text import (
-    _clean_narration_punctuation,
     _find_scene_for_midpoint,
-    _normalise_narration_segment,
-    _post_dedup_narration,
     _recommended_char_budget,
     _scene_available_seconds,
     _text_char_count,
-    _truncate_at_sentence,
 )
 from deslop_qc import analyze_deslop_qc
 from speech_ownership import (
@@ -637,47 +633,3 @@ def validate_narration_or_raise(
     else:
         log("narration lint: ok")
     return report
-
-
-def _validate_narration_budget(narration, scenes_analysis):
-    """Trim lint-validated narration to its timing budgets; drop what cannot be spoken."""
-    del scenes_analysis  # scene boundaries are advisory (lint warns); authored timing is kept
-    cleaned = []
-    for raw in narration:
-        item = _normalise_narration_segment(raw)
-        max_chars = _recommended_char_budget(item["start"], item["end"])
-        if max_chars < 5:
-            log(f"  丢弃过短解说段 {item['start']:.1f}-{item['end']:.1f}s")
-            continue
-        if _text_char_count(item["narration"]) > max_chars * 1.25:
-            truncated = _truncate_at_sentence(item["narration"], max_chars)
-            if truncated and _text_char_count(truncated) >= 5:
-                log(f"  解说超预算，已截短: {item['start']:.1f}-{item['end']:.1f}s")
-                item["narration"] = truncated
-            else:
-                log(
-                    f"  解说超预算且无法安全截断，已丢弃: {item['start']:.1f}-{item['end']:.1f}s"
-                )
-                continue
-        item["narration"] = _clean_narration_punctuation(item["narration"])
-        stripped = item["narration"].strip()
-        if stripped and stripped[-1] in "，：、；,—":
-            item["narration"] = stripped.rstrip("，：、；,—") + "。"
-        cleaned.append(item)
-
-    cleaned.sort(key=lambda n: n["start"])
-    deduped = []
-    for item in cleaned:
-        if deduped and item["start"] < deduped[-1]["end"]:
-            prev = deduped[-1]
-            log(
-                f"  解说时间重叠: {item['start']:.1f}-{item['end']:.1f}s vs "
-                f"{prev['start']:.1f}-{prev['end']:.1f}s"
-            )
-            if _text_char_count(item["narration"]) > _text_char_count(
-                prev["narration"]
-            ):
-                deduped[-1] = item
-        else:
-            deduped.append(item)
-    return _post_dedup_narration(deduped)

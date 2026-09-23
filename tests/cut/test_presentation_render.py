@@ -4,7 +4,6 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-import wave
 import array
 import math
 import pytest

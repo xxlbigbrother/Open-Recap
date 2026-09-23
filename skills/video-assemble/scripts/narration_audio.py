@@ -284,7 +284,7 @@ def _build_timed_narration(
         with wave.open(wav_path, "rb") as wf:
             wf_data = bytearray(wf.readframes(wf.getnframes()))
 
-        # 按场景边界裁剪
+        # 检查完整音频能否放入当前窗口
         audio_samples = len(wf_data) // 2
         available = end_boundary - actual_start
         write_samples = audio_samples
@@ -308,7 +308,7 @@ def _build_timed_narration(
             no_safe_fit_count += 1
             continue
 
-        # 重叠检测：跳过与前段重叠的部分（在 fade 之前，避免截断后丢失 fade-in）
+        # 重叠时移动整段音频；移动后放不下则阻断，不裁剪正文
         if actual_start < last_written_end:
             overlap_ms = (last_written_end - actual_start) * 1000 / sample_rate
             if last_written_end >= actual_start + write_samples:
@@ -328,7 +328,7 @@ def _build_timed_narration(
                 no_safe_fit_count += 1
                 continue
 
-        # fade-in / fade-out（在 overlap 裁剪之后应用，确保正确的音频包络）
+        # 确定完整音频的落点后应用 fade-in / fade-out
         fade_in_len, fade_out_len = _speech_safe_fade_lengths(
             wf_data, write_samples, sample_rate, CONFIG["fade_ms"]
         )

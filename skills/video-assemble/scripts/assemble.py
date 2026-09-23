@@ -58,7 +58,7 @@ def assemble_video(input_video, tts_segments, work_dir, output_path):
         ass_path = subtitle_render._generate_ass(tts_segments, work_dir, video_duration, canvas)
         lib.log(f"压制字幕文件: {ass_path}")
 
-    # 可选 BGM：作为一条独立音轨（input [2:a]）混入，旁白处自动压低
+    # 可选 BGM：作为独立音轨混入，旁白处自动压低
     bgm_path = lib.CONFIG["bgm_path"]
     has_bgm = bool(bgm_path) and os.path.exists(bgm_path)
     if bgm_path and not has_bgm:
@@ -107,7 +107,7 @@ def assemble_video(input_video, tts_segments, work_dir, output_path):
         bgm_audio_label=bgm_audio_label,
     )
 
-    # BGM is input [2:a]; -stream_loop -1 loops it to cover the whole timeline (amix
+    # -stream_loop -1 loops BGM to cover the whole timeline (amix
     # duration=first + -t trim it back to the video length).
     bgm_input = ["-stream_loop", "-1", "-i", str(bgm_path)] if has_bgm else []
 

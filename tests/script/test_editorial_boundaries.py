@@ -1,5 +1,4 @@
 """Regressions for execution ordering that a language-model JSON draft can violate."""
-import copy
 from test_editorial_contract import fixture,modules
 
 

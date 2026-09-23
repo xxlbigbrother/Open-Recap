@@ -122,25 +122,20 @@ def _generate_edited_storyboard(work_dir, source_video_path, *, force=False):
 def _prepend_storyboard_brief_header(
     brief_path, source_storyboard, edited_storyboard, *, cut_mode
 ):
-    """Post-process the RETURNED brief markdown FILE (C1): prepend a short storyboard header.
-
-    Editing the brief FILE on disk (not brief.py) keeps the brief⇄narration twin byte-identical.
-    Branches the edited-storyboard line on clip_plan_validated presence (edited_storyboard truthy)
-    so pass1 never prints a not-yet-existing path. If labels_burned:false, point to inspect clip-map.
-    """
+    """Link generated storyboards and their timing metadata from the writing brief."""
     if not source_storyboard and not edited_storyboard:
         return
     try:
         brief_path = Path(brief_path)
         lines = ["## Storyboard（先看 storyboard 再写）", ""]
-        any_labels_missing = False
+        timing_links = []
         if source_storyboard:
             pages = source_storyboard.get("page_images") or []
             lines.append(
                 f"- 源时间线 storyboard: {', '.join(pages)}（tiles 时间戳=原片时间）"
             )
             if not source_storyboard.get("labels_burned", False):
-                any_labels_missing = True
+                timing_links.append("[源时间元数据](storyboard/source_storyboard.json)")
         if cut_mode and edited_storyboard:
             pages = edited_storyboard.get("page_images") or []
             lines.append(
@@ -148,10 +143,10 @@ def _prepend_storyboard_brief_header(
                 "（每块双标 out 时间 / src 原片时间；注意区分两条时间线）"
             )
             if not edited_storyboard.get("labels_burned", False):
-                any_labels_missing = True
-        if any_labels_missing:
+                timing_links.append("[成片与原片时间元数据](storyboard/edited_storyboard.json)")
+        if timing_links:
             lines.append(
-                "- 时间戳未烧入 → 用 `inspect clip-map` 查时间（JSON sidecar 仍为权威时间源）"
+                "- 时间戳未烧入 → 查看 " + "、".join(timing_links) + " 的 tiles 字段。"
             )
         lines.append("")
         header = "\n".join(lines) + "\n"

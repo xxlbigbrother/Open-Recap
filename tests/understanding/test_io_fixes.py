@@ -10,10 +10,9 @@ sys.path.insert(
         / "scripts"
     ),
 )
-import json  # noqa: F401
-import subprocess  # noqa: F401
+import json
 from subprocess import CompletedProcess
-import pytest  # noqa: F401
+import pytest
 import asr
 import extract
 import understanding_runner as understand

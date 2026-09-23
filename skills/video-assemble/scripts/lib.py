@@ -2,7 +2,6 @@
 import math
 import os
 import subprocess
-from pathlib import Path
 
 
 # ── 配置 ──────────────────────────────────────────────────────────────
@@ -137,10 +136,8 @@ if isinstance(_EXISTING_CONFIG_REF, dict):
     _EXISTING_CONFIG_REF.update(CONFIG)
     CONFIG = _EXISTING_CONFIG_REF
 
-SCRIPT_DIR = Path(__file__).parent
-
 def narration_tempo_budget(tts_rate_offset=0.0):
-    """Return the canonical tempo budget shared by voiceover and assemble.
+    """Return the cumulative tempo budget enforced during assembly.
 
     `effective_tempo` is the user-perceived cumulative compression:
     TTS rate × global narration atempo × per-segment atempo.  The segment atempo

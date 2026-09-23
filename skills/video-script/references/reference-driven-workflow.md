@@ -62,13 +62,13 @@ python3 scripts/run_skill.py video-script editorial.py --project /path/project.j
 
 ## 第一版学习包
 
-`styles/guided-discovery-v1.json`引用 `cases/kungfu-discovery-v1.json`。它包含一个已被用户认可的局部实例、两个参考候选、一个需要修订的反例。案例的公开做法、研究解释、用户反馈范围分别记录。
+`../../references/styles/guided-discovery-v1.json`引用 `../../references/cases/kungfu-discovery-v1.json`。它包含一个已被用户认可的局部实例、两个参考候选、一个需要修订的反例。案例的公开做法、研究解释、用户反馈范围分别记录。
 
 新增电影时提供自己的理解与源映射，复用方法而不复用《功夫》的剧情。案例中的人物、台词、时间和幕后事实不能转为目标影片证据。适用条件不满足时允许不用任何暂停或回放。
 
 ## v2内容实验（显式选择）
 
-`styles/guided-discovery-v2.json`保留v1四案，补入动作引出下一人物、同场不同反应、本领与代价三个参考候选。每案带文本/既有画面观察范围，不等于该片知识事实，也未获用户认可。旧项目继续固定v1。
+`../../references/styles/guided-discovery-v2.json`保留v1四案，补入动作引出下一人物、同场不同反应、本领与代价三个参考候选。每案带文本/既有画面观察范围，不等于该片知识事实，也未获用户认可。旧项目继续固定v1。
 
 新增引导与案例已在《钢铁侠》做五份控制稿、五份组合实验稿。两组均存在依赖影片常识和推断过满的问题，因此未升级默认prompt；单次Agent核对成功不代表自动生成稳定。具体诊断与逐稿阅读见工作区`docs/allhands/commentary-value-probe-results.md`。
 

@@ -20,7 +20,7 @@ bash setup.sh
 
 在能读本地文件、执行命令和联网研究的 Agent 中打开仓库，发送一句话：
 
-> 读取 skills/openrecap/SKILL.md，用「我的原片路径」制作第一部分中文电影解说。先介绍有来源的电影背景，让新观众能跟上剧情，使用茉莉女声。请完成理解、研究、创作、配音、剪辑和成片，输出可播放视频。
+> 读取 skills/SKILL.md，用「我的原片路径」制作第一部分中文电影解说。先介绍有来源的电影背景，让新观众能跟上剧情，使用茉莉女声。请完成理解、研究、创作、配音、剪辑和成片，输出可播放视频。
 
 Agent 按技能自动接力。脚本统一入口是：
 
@@ -33,18 +33,35 @@ Agent 按技能自动接力。脚本统一入口是：
 
 ## 六个完整 skill
 
-- [openrecap](skills/openrecap/SKILL.md)：总流程、任务接力和交付。
+- [openrecap](skills/SKILL.md)：总流程、任务接力和交付。
 - [video-understanding](skills/video-understanding/SKILL.md)：画面、对白与剧情理解。
 - [video-script](skills/video-script/SKILL.md)：电影背景研究、风格、连续稿与审稿。
 - [video-cut](skills/video-cut/SKILL.md)：播放、回放、定格与时间编排。
 - [video-voiceover](skills/video-voiceover/SKILL.md)：MiMo / 豆包配音、实际音长与缓存。
 - [video-assemble](skills/video-assemble/SKILL.md)：字幕、原声保护、混音和成片。
 
-每个 skill 的必要代码与参考放在对应目录。公共模型适配和启动辅助在 `scripts/`，回归测试在 `tests/`。运行只使用本仓库与用户配置，不依赖作者机器上的实验目录。
+总入口、五个阶段技能和共享参考库都在同一个 `skills/` 文件夹：
+
+```text
+skills/
+├── SKILL.md                openrecap 总入口
+├── video-understanding/    视频理解
+├── video-script/           解说创作
+├── video-cut/              画面剪辑
+├── video-voiceover/         配音
+├── video-assemble/         合成
+├── references/             解说风格、方法与参考案例
+│   ├── commentary-style.md  讲述约定
+│   ├── styles/              可选风格版本
+│   └── cases/               学习案例
+└── agents/                 总入口的 Agent 展示信息
+```
+
+各阶段保留自己的执行代码与专用格式说明。风格统一由 `references/` 提供，通过项目的 `style_path` 选择。公共模型适配和启动辅助在仓库根 `scripts/`，回归测试在 `tests/`。
 
 ## 默认配置与验证范围
 
-视觉与全局索引使用 Gemini3.8 Flash，ASR 使用豆包 Seed ASR2.0，审稿使用 Seed2.1 Pro260628，项目默认 MiMo 茉莉原速。详见 [模型配置](references/model-config.md) 和 [讲述风格](references/commentary-style.md)。
+视觉与全局索引使用 Gemini3.8 Flash，ASR 使用豆包 Seed ASR2.0，审稿使用 Seed2.1 Pro260628，项目默认 MiMo 茉莉原速。详见 [模型配置](skills/references/model-config.md) 和 [讲述风格](skills/references/commentary-style.md)。
 
 已有版本用《功夫》《钢铁侠》进行过真实实验。代码测试包含实际合成素材的剪辑、音频、字幕及时间校验；字幕主要按文字估时，资料与理解仍需核实，技术检查不替代看片。
 

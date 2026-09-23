@@ -21,7 +21,7 @@ description: >
 - **DIRECTED**：落实用户指定的结构、镜头、台词和表达。
 - **REVISION**：先记录修改项与冻结项，保留已认可内容，只修改受反馈影响的候选段落。
 
-阅读 [创作剪辑工作法](references/creative-editing-playbook.md)。重看、回放或知识解释同时参考 [重看式讲述](references/guided-rewatch.md)。风格和案例提供讲述方法，不能提供目标影片事实。
+阅读 [创作剪辑工作法](../references/creative-editing-playbook.md)。重看、回放或知识解释同时参考 [重看式讲述](../references/guided-rewatch.md)。风格和案例统一保存在同级 `../references/`；项目 `style_path` 选择其中 `styles/` 的版本。它们提供讲述方法，不能提供目标影片事实。
 
 ## 2. 核实电影资料
 

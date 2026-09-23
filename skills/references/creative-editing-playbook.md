@@ -1,5 +1,7 @@
 # 创作剪辑工作法
 
+本文件是共享创作参考；下文候选格式与执行脚本见 [解说创作技能](../video-script/SKILL.md)。
+
 本参考规定 Agent 的创作判断。先写连续口述，再把决定编入 `recap_story_plan.candidate.json`，由 `editorial.py --candidate` 校验、评审并统一投影执行计划。
 
 ## 先判断创作控制模式
@@ -140,7 +142,7 @@ ffmpeg -i input.mp4 -vf "select='gt(scene,0.35)',showinfo" -an -f null -
 ## Agent 创作产物
 
 `author_draft.md` 记录连续口述与原声交接；`recap_story_plan.candidate.json` 是提交的单一候选。
-字段以 `scripts/editorial_prompts.py` 的 `STORY_SHAPE` 和 `scripts/editorial_contract.py` 为准，不另造兼容稿件格式。
+字段以 [editorial_prompts.py](../video-script/scripts/editorial_prompts.py) 的 `STORY_SHAPE` 和 [editorial_contract.py](../video-script/scripts/editorial_contract.py) 为准，不另造兼容稿件格式。
 
 通过 `editorial.py --candidate` 后，从同一 story 生成接受稿、`visual_audio_board.json` 与 `editorial_plan.json`。
 模型报告、证据和输入快照随版本保存。失败候选不得覆盖接受稿；修改内容后重新提交与投影，再检查真实配音和成片。

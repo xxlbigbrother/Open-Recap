@@ -121,7 +121,7 @@ def initialize(video, work_dir, *, title=None, start=0, end=None):
     if work.exists() and any(work.iterdir()):
         raise ValueError("existing project directory is not empty")
     ident = re.sub(r"[^a-zA-Z0-9_-]+", "-", work.name).strip("-") or "recap"
-    profile = ROOT / "skills/video-script/references/styles/guided-discovery-v2.json"
+    profile = ROOT / "skills/references/styles/guided-discovery-v2.json"
     project = {"schema_version": 1, "id": ident, "title": title or video.stem,
                "source": {"id": ident + "-source", "path": os.path.relpath(video, work),
                           "media_origin": 0, "media_duration": duration, "range": [start, end]},

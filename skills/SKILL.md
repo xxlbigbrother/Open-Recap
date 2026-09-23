@@ -7,21 +7,23 @@ description: 从本地电影制作中文解说成片。统一调度视频理解�
 
 ## 1. 入口与环境
 
-包根目录是本文件上两级。完整保留整个仓库；模型适配和统一入口由包内脚本提供。安装与凭证见 [运行说明](../../怎么运行.md)。
+所有命令从仓库根目录执行，即包含 `run.py` 和 `setup.sh` 的目录，位于本文件所在 `skills/` 的上一级。完整保留整个仓库；模型适配和统一入口由包内脚本提供。安装与凭证见 [运行说明](../怎么运行.md)。
 
 首次运行 `bash setup.sh`，将模型密钥写入私有 `.env`，再运行 `.venv/bin/python run.py doctor`。已有环境变量优先；`RECAP_ENV_FILE` 可指向包外配置。检查只报告是否配置，不显示密钥、不发模型请求。
 
-默认 Gemini3.8 Flash 负责视觉与全局索引，豆包 Seed ASR2.0 负责原声转写，Seed2.1 Pro260628 审稿，MiMo 茉莉原速配音。用户指定的范围、声音和速度优先；其他模型配置见 [模型配置](../../references/model-config.md)。
+默认 Gemini3.8 Flash 负责视觉与全局索引，豆包 Seed ASR2.0 负责原声转写，Seed2.1 Pro260628 审稿，MiMo 茉莉原速配音。用户指定的范围、声音和速度优先；其他模型配置见 [模型配置](references/model-config.md)。
 
 ## 2. 完整技能链
 
+本目录的 `SKILL.md` 是总入口；阶段技能目录与共享 `references/` 并列。解说风格和案例统一读取 [讲述约定](references/commentary-style.md)，项目 `style_path` 选择 `references/styles/` 中的版本。
+
 按工作需要读取对应技能，Agent 持续完成创作和执行，不让用户手动串接阶段：
 
-1. [视频理解](../video-understanding/SKILL.md)：场景、抽帧、对白、人物关系与剧情索引。
-2. [解说创作](../video-script/SKILL.md)：有来源的电影背景、连续稿、证据与原声任务、统一候选评审。
-3. [画面剪辑](../video-cut/SKILL.md)：普通播放、回看、定格与源时间映射。
-4. [配音](../video-voiceover/SKILL.md)：按项目音色合成完整旁白，测量实际时长并缓存。
-5. [合成](../video-assemble/SKILL.md)：字幕、原声保护、混音、响度和成片检查。
+1. [视频理解](video-understanding/SKILL.md)：场景、抽帧、对白、人物关系与剧情索引。
+2. [解说创作](video-script/SKILL.md)：有来源的电影背景、连续稿、证据与原声任务、统一候选评审。
+3. [画面剪辑](video-cut/SKILL.md)：普通播放、回看、定格与源时间映射。
+4. [配音](video-voiceover/SKILL.md)：按项目音色合成完整旁白，测量实际时长并缓存。
+5. [合成](video-assemble/SKILL.md)：字幕、原声保护、混音、响度和成片检查。
 
 这是一个包含六个 skill 的完整代码库。上述列的是创作分工；执行时先测配音时长，再编译画面、合成。
 
@@ -42,7 +44,7 @@ description: 从本地电影制作中文解说成片。统一调度视频理解�
 
 ## 4. 研究、写稿与续跑
 
-按解说创作技能完成背景研究与连续稿；遵循 [知识型精讲约定](../../references/commentary-style.md)。影片身份与有助于进入当前故事的背景放在开头，其余知识放在观众需要的画面。
+按解说创作技能完成背景研究与连续稿；遵循 [知识型精讲约定](references/commentary-style.md)。影片身份与有助于进入当前故事的背景放在开头，其余知识放在观众需要的画面。
 
 研究脚本可生成线索，但 Agent 必须打开来源核实。将采用的知识写入 `stage2_research.json`，在项目填写 `research_path`；结构见创作技能的研究指南。新增旁注写入 `verified_notes`，不改原始理解。
 

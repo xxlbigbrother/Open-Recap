@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import shutil
 from pathlib import Path
 import pytest
 
@@ -48,3 +49,14 @@ def test_missing_context_is_not_silently_adopted(tmp_path):
 def test_invalid_provenance_or_unbacked_user_approval_rejected(tmp_path,change):
     path=bundle(tmp_path);p=tmp_path/'cases.json';d=json.loads(p.read_text());change(d);p.write_text(json.dumps(d))
     with pytest.raises(ValueError):module().load_style(path)
+
+
+@pytest.mark.parametrize("version,case_count", [(1, 4), (2, 7)])
+def test_shared_style_bundle_loads_after_directory_is_copied(tmp_path, version, case_count):
+    references = SCRIPTS.parents[1] / "references"
+    copied = tmp_path / "references"
+    shutil.copytree(references, copied)
+    catalog = module().load_style(copied / "styles" / f"guided-discovery-v{version}.json")
+    assert catalog["profile"]["version"] == version
+    assert len(catalog["cases"]) == case_count
+    assert all(Path(path).is_relative_to(copied) for path in catalog["fingerprints"])

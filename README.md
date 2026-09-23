@@ -37,7 +37,7 @@ Agent 按技能自动接力。脚本统一入口是：
 - [video-understanding](skills/video-understanding/SKILL.md)：画面、对白与剧情理解。
 - [video-script](skills/video-script/SKILL.md)：电影背景研究、风格、连续稿与审稿。
 - [video-cut](skills/video-cut/SKILL.md)：播放、回放、定格与时间编排。
-- [video-voiceover](skills/video-voiceover/SKILL.md)：MiMo / 豆包配音、实际音长与缓存。
+- [video-voiceover](skills/video-voiceover/SKILL.md)：MiMo / 豆包 / ElevenLabs 配音、实际音长与缓存。
 - [video-assemble](skills/video-assemble/SKILL.md)：字幕、原声保护、混音和成片。
 
 总入口、五个阶段技能和共享参考库都在同一个 `skills/` 文件夹：

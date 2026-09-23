@@ -54,3 +54,12 @@ def test_tts_meta_preserves_mimo_identity_instead_of_labeling_it_doubao():
     assert out['segments'][0]['tts_model']=='api_xiaomi_mimo-v2.5-tts'
     assert out['segments'][0]['tts_speaker']=='茉莉'
     assert out['segments'][0]['preapplied_tempo']==1
+
+
+def test_elevenlabs_audio_keeps_its_provider_and_model_in_delivery_metadata():
+    c=compiled();catalog={'n':{'text':'看清这个姿势','path':'ready.wav','duration':1.8,'post_tempo':1,
+        'provider':'aihub-elevenlabs','model':'eleven_v3','speaker':'mandarin-voice-id'}}
+    out=module().build_tts_meta(c,catalog)
+    assert out['engine']=='elevenlabs-tts'
+    assert out['segments'][0]['tts_provider']=='aihub-elevenlabs'
+    assert out['segments'][0]['tts_model']=='eleven_v3'

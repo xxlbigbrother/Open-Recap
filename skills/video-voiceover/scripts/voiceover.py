@@ -101,16 +101,27 @@ def synthesize_mimo_preset(text,output_wav,*,speaker):
 def prepare_audio(project,plan,work,synthesizer=None):
     work=Path(work);directory=work/'editorial_tts';directory.mkdir(parents=True,exist_ok=True)
     voice=project.get('voice',{});provider=voice.get('provider','aihub-doubao')
-    if provider not in {'aihub-doubao','aihub-mimo'}:raise ValueError('unsupported voice provider')
-    speaker=voice.get('speaker','茉莉' if provider=='aihub-mimo' else 'zh_male_cixingjieshuonan_uranus_bigtts')
+    if provider not in {'aihub-doubao','aihub-mimo','aihub-elevenlabs'}:raise ValueError('unsupported voice provider')
+    speaker=voice.get('speaker',None if provider=='aihub-elevenlabs' else '茉莉' if provider=='aihub-mimo' else 'zh_male_cixingjieshuonan_uranus_bigtts')
     if not isinstance(speaker,str) or not speaker.strip():raise ValueError('voice speaker must be nonempty')
-    tempo=voice.get('tempo',1 if provider=='aihub-mimo' else 1.1)
+    tempo=voice.get('tempo',1 if provider in {'aihub-mimo','aihub-elevenlabs'} else 1.1)
     model='api_xiaomi_mimo-v2.5-tts' if provider=='aihub-mimo' else 'api_doubao_doubao-tts-2.0'
     if isinstance(tempo,bool) or not isinstance(tempo,(int,float)) or not math.isfinite(tempo) or not .5<=tempo<=2:raise ValueError('tempo must be finite in .5..2')
+    elevenlabs_settings=None
+    if provider=='aihub-elevenlabs':
+        from elevenlabs_adapter import tts_settings
+        elevenlabs_settings=tts_settings(speaker=speaker,model=voice.get('model','eleven_v3'),
+                                        voice_settings=voice.get('voice_settings'),language_code=voice.get('language_code'))
+        model=elevenlabs_settings['model']
     if synthesizer is None:
         load_environment()
         if provider=='aihub-mimo':
             synthesizer=lambda text,path,rate: synthesize_mimo_preset(text,path,speaker=speaker)
+        elif provider=='aihub-elevenlabs':
+            from elevenlabs_adapter import synthesize as synthesize_elevenlabs
+            synthesizer=lambda text,path,rate: synthesize_elevenlabs(
+                text,path,speaker=speaker,model=model,voice_settings=elevenlabs_settings['voice_settings'],
+                language_code=elevenlabs_settings['language_code'])
         else:
             os.environ['DOUBAO_TTS_VOICE']=speaker
             from aihub_adapter import synthesize
@@ -118,17 +129,43 @@ def prepare_audio(project,plan,work,synthesizer=None):
     catalog={}
     for n in plan['narrations']:
         identity={'text':n['text'],'speaker':speaker,'tempo':tempo,'native_rate':0,'provider':provider,'model':model,'version':1}
+        if elevenlabs_settings is not None:
+            # Preserve the exact historical identity/serialization for MiMo and Doubao.
+            identity['elevenlabs_settings']=elevenlabs_settings
         key=hashlib.sha256(json.dumps(identity,sort_keys=True,ensure_ascii=False).encode()).hexdigest()[:20]
         raw=directory/f'{key}-raw.wav';ready=directory/f'{key}-ready.wav';meta=directory/f'{key}.json'
         valid=False
         if meta.exists() and ready.exists():
             old=read_json(meta);valid=old.get('identity')==identity and old.get('ready_sha256')==fingerprint(ready)
+        if valid and elevenlabs_settings is not None:
+            sidecar=raw.with_suffix('.provider.json')
+            try:
+                provider_record=read_json(sidecar)
+                valid=raw.is_file() and provider_record.get('audio_sha256')==fingerprint(raw)
+            except (OSError, ValueError, AttributeError):
+                valid=False
         if not valid:
+            if elevenlabs_settings is not None:
+                # A new raw generation must never validate an older processed WAV
+                # if synthesis succeeds but postprocessing is interrupted.
+                meta.unlink(missing_ok=True)
             print(f"Voice {n['id']}",flush=True)
             synthesizer(n['text'],raw,rate='+0%')
             run(['ffmpeg','-v','error','-y','-i',str(raw),'-af',f'atempo={tempo},loudnorm=I=-20:TP=-2:LRA=11','-ar','44100','-ac','1','-c:a','pcm_s16le',str(ready)])
             write_json(meta,{'identity':identity,'ready_sha256':fingerprint(ready),'duration':pcm_duration(ready)})
         catalog[n['id']]={'id':n['id'],'path':str(ready.resolve()),'duration':pcm_duration(ready),'text':n['text'],'post_tempo':tempo,'speaker':speaker,'provider':provider,'model':model}
+        if elevenlabs_settings is not None:
+            catalog[n['id']]['voice_settings']=elevenlabs_settings['voice_settings']
+            catalog[n['id']]['language_code']=elevenlabs_settings['language_code']
+            sidecar=raw.with_suffix('.provider.json')
+            if sidecar.is_file():
+                catalog[n['id']].update({
+                    'provider_metadata_path':str(sidecar.resolve()),
+                    'alignment_clock':'raw_audio',
+                    # atempo is a nominal scale; measured ready duration remains authoritative.
+                    'alignment_time_mapping':{'source_clock':'raw_audio','target_clock':'ready_audio',
+                                              'scale':1/tempo,'offset_seconds':0,'exact':False},
+                })
     write_json(work/'audio_catalog.json',catalog)
     write_json(work/'audio_durations.json',{key:value['duration'] for key,value in catalog.items()})
     return catalog

@@ -40,6 +40,7 @@ def build_tts_meta(compiled,catalog):
             'end':n['end']+.02,'audio_path':audio['path'],'audio_duration':duration,'truncated':False,'truncate_reason':'none',
             'tts_rate_offset':0,'global_narration_speed':1,'segment_tempo_factor':1,'effective_tempo':1,
             'preapplied_tempo':audio['post_tempo'],'segment_audio_schema_version':1})
-    engine='mimo-tts' if providers=={'aihub-mimo'} else 'doubao-tts' if providers<={'aihub-doubao'} else 'mixed-tts'
+    engines={'aihub-mimo':'mimo-tts','aihub-doubao':'doubao-tts','aihub-elevenlabs':'elevenlabs-tts'}
+    engine=engines.get(next(iter(providers)),'mixed-tts') if len(providers)==1 else ('doubao-tts' if not providers else 'mixed-tts')
     return {'engine':engine,'segments':segments,'partial':False,'failures':[],
             'timing_policy':'audio already speed-adjusted; assembly speed must remain 1, tighten disabled'}

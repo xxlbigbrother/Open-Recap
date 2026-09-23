@@ -1,0 +1,337 @@
+{
+  "schema_version": 1,
+  "id": "kungfu-discovery",
+  "version": 1,
+  "cases": [
+    {
+      "id": "kungfu-discovery-first-position-inference",
+      "title": "比较前后站位，有限推断后接回受伤求援",
+      "status": "user_approved_local",
+      "source": {
+        "reference_id": "kungfu-jackiemovie",
+        "reference_range": [
+          1007,
+          1050
+        ],
+        "source_clock": "reference_video",
+        "source_evidence_ids": [
+          "E02"
+        ]
+      },
+      "when_use": [
+        "包租婆撤退后，酱爆面对二当家；袭击已发生，酱爆无伤而二当家飞出，观众自然想知道谁救了人。",
+        "施招者未被直接展示，但前后存在可核对的同方向站位；重看能补出首次容易漏掉的线索。"
+      ],
+      "added_value": "比较袭击前酱爆身后的苦力强与袭击后相应空位，让观众参与一个有边界的推理；再把局部脱险接到城寨面临更大风险。正常继续播放不会主动呈现这组对照。",
+      "evidence_requirements": [
+        "E02及其01-kick.jpg、frame_matches.json支持参考的前后回放；人物出现与空位是观察，救人者身份仍是推断，原片未直接展示明确施招者。",
+        "本地复用以review_decisions.json的approved_segment快照为准：movie_source回放1093.7–1095.04、1119.0–1120.04秒，定格取1095.0与1120.0秒。原片坐标不能当参考或成片坐标。",
+        "本地认可仅覆盖local_v2_output 113.000–143.958秒、文稿n05–n08及既有操作；保留文稿、证据顺序、声音、节奏和受伤叫人的退出安排。快照上界精度更高，此处记至毫秒不意味着移动切点。",
+        "需保留受伤求援的后果；后续苦力强公开出列只能呼应先前线索，不能倒灌为此前一脚的直接证明。"
+      ],
+      "sequence": [
+        "[本地已认可] 先让袭击结果出现，再提出出手者问题。",
+        "[本地已认可] 静音回放袭击前画面，停在苦力强位于酱爆身后的位置，使指认与证据同步。",
+        "[本地已认可] 回放袭击后同方向画面并看清空位，按既有顺序对照证据、给出倾向判断，明确仍不能定论。",
+        "[本地已认可] 由酱爆脱险转向城寨将承担的后果，接回二当家受伤和叫人原声；本例概括不替代原快照。",
+        "[后续候选] 苦力强公开出列、台词与首轮动作落地后再回应站位线索，见kungfu-discovery-threat-to-choice；此步不在首处认可范围。"
+      ],
+      "return_to_story": "立即接二当家受伤、叫人和援兵到场；后续回报候选是在苦力强出列后认回先前身后的人，同时保留神秘一脚的推断边界。",
+      "when_not_use": [
+        "事件尚未发生、观众没有自然疑问，或原片已明确展示答案。",
+        "站位、人物或前后时刻无法核对，重看没有增量，或分析后没有具体事件可接。",
+        "为了统一暂停次数和长度而改写本地已认可片段。"
+      ],
+      "feedback": [
+        {
+          "origin": "reference_observation",
+          "scope": {
+            "record": "reference-studies/kungfu-jackiemovie/analysis/deep-study/evidence_index.json",
+            "clock": "reference_video",
+            "range_seconds": [
+              1007,
+              1050
+            ],
+            "evidence_ids": [
+              "E02"
+            ]
+          },
+          "judgment": "参考提供可回看的站位线索；可参与性是研究解释，身份结论仍属推断。patterns.json的p04提供技巧概括，粗粒度示例时间不替代E02。"
+        },
+        {
+          "origin": "user_feedback",
+          "scope": {
+            "record": "video-recap-reproduction/work/kungfu-stage2-v2/continuity-review/review_decisions.json",
+            "artifact": "kungfu-stage2-v2",
+            "clock": "local_v2_output",
+            "range_seconds": [
+              113.0,
+              143.958
+            ],
+            "applies_to": "仅首处站位推理的文稿、证据顺序、声音、节奏与接回受伤现场的既有安排"
+          },
+          "judgment": "用户称第一个暂停仍很惊艳，因此仅标user_approved_local；认可不涉及参考1007–1050秒本身、后续修订或跨片效果。"
+        },
+        {
+          "origin": "editorial_review",
+          "scope": {
+            "record": "docs/kungfu-stage2-v2-continuity-review.md",
+            "artifact": "kungfu-stage2-v2",
+            "applies_to": "苦力强出列后的回收，超出首处认可范围"
+          },
+          "judgment": "后续尚需回应隐藏救人者的问题；这是未渲染的修改方向，不是已认可成果。"
+        }
+      ],
+      "transfer_rule": "迁移自然疑问、可比证据、有限结论、具体后果与后续回收的关系。目标片重新核对人物或物件；不迁移苦力强身份结论、秒数或操作数量。"
+    },
+    {
+      "id": "kungfu-discovery-comedy-audio-handoff",
+      "title": "停水争执交给完整表演，笑点落地后接回人物",
+      "status": "candidate",
+      "source": {
+        "reference_id": "kungfu-jackiemovie",
+        "reference_range": [
+          598,
+          726
+        ],
+        "source_clock": "reference_video",
+        "source_evidence_ids": [
+          "E03"
+        ]
+      },
+      "when_use": [
+        "城寨群像刚建立，酱爆洗头中途停水，接下来要找包租婆；观众需要知道争执缘由。",
+        "笑点和人物关系依赖完整问答、语气、停顿及租客反应，继续旁白会抢掉表演的落点。"
+      ],
+      "added_value": "旁白交代前提后让电影完成争执，观众在笑点中认识包租婆与租客的关系。价值来自交接时机和接回人物，不需要额外制造暂停分析。",
+      "evidence_requirements": [
+        "E03与transcript_compact.json记录reference_video旁白613.62秒结束、688.98秒接回，中间75.36秒无标注作者旁白；它不是本地时长，也不代表静音或只有对白。",
+        "剪辑前须在对应原片核对发问到最后反应的完整表演和音轨，包含停顿、动作、音乐与音效。",
+        "参考接回后谈电影关联及试镜背景，再回收群像；这些外部说法尚未核实，不转入事实库。演员表演来自原电影，参考贡献是旁白入口、让位与返回。"
+      ],
+      "sequence": [
+        "[参考观察] 发问前交代停水及人物关系，旁白于参考613.62秒收声。",
+        "[参考观察] 电影承担问答、训斥、租客反应与笑点，参考688.98秒才恢复旁白。",
+        "[参考观察] 接回包租婆的形象与相关背景，717.26–725.66秒回收群像关系；下一句从725.94秒开始引向她发现包租公，句子延伸至研究窗口之外。",
+        "[迁移候选] 本地再创作先接刚看见的人物关系，再推进下一事件；背景只有可核查且有帮助才保留，不照搬75.36秒或参考幕后说法。"
+      ],
+      "return_to_story": "由包租婆刚建立的权威和租客反应接回城寨日常，随后进入她发现包租公的冲突；若无可靠背景资料，直接从表演结果推进。",
+      "when_not_use": [
+        "观众缺少争执前提，或现有素材截断问答、动作与反应。",
+        "只因没有旁白稿而保留长原声，或先解释包袱、途中插播百科。",
+        "把参考原声时长或未核实的试镜故事当作固定模板。"
+      ],
+      "feedback": [
+        {
+          "origin": "reference_observation",
+          "scope": {
+            "record": "reference-studies/kungfu-jackiemovie/analysis/deep-study/evidence_index.json",
+            "clock": "reference_video",
+            "range_seconds": [
+              598,
+              726
+            ],
+            "evidence_ids": [
+              "E03"
+            ]
+          },
+          "judgment": "索引和转写支持完整交接及旁白边界；喜剧效果属于研究解释。patterns.json的p03是较宽的技巧概括，不是精确音轨边界。"
+        },
+        {
+          "origin": "author_candidate",
+          "scope": {
+            "applies_to": "本案例的本地迁移条件与接回策略"
+          },
+          "judgment": "尚无本地新小样或用户反馈，登记为candidate；省略未核实背景后直接推进的方案也需连续稿与看片验证。"
+        }
+      ],
+      "transfer_rule": "重新识别目标片完整的喜剧表演单位，补足前提、让演员完成任务、从表演结果接回故事；不迁移停水情节、人物标签或固定秒数。"
+    },
+    {
+      "id": "kungfu-discovery-threat-to-choice",
+      "title": "母子受威胁，苦力强选择落地后回应先前线索",
+      "status": "candidate",
+      "source": {
+        "reference_id": "kungfu-jackiemovie",
+        "reference_range": [
+          1087,
+          1137
+        ],
+        "source_clock": "reference_video",
+        "source_evidence_ids": [
+          "E04"
+        ]
+      },
+      "when_use": [
+        "援兵已控制城寨，街坊受辱、赔笑和躲避都未解除危险，黑帮将逼问升级为对母子的直接威胁。",
+        "观众关心谁愿承担救人风险；等待、认下责任和行动能表现选择的代价。若前文已展示站位线索，出列后还需回应这笔关注。"
+      ],
+      "added_value": "收声让威胁、等待与主动承担形成完整选择。本地修订的增量候选是先接住站位线索和母子处境，再讨论动作，避免人物问题刚有回应就离开故事。",
+      "evidence_requirements": [
+        "E04与转写记录reference_video旁白1103.05秒结束、关键原声1117.61–1118.45秒、1125.06秒恢复；不要与本地v2的原声段混算。",
+        "泼油、点火威胁和逼问须在对应画面出现后说明；保护等待、台词、反应和起势，不只保护一句对白。",
+        "本地评审记载local_v2_output约271秒后有约69秒电影表演；这是近似描述，执行前须查本地清单与音轨，不能据此定切点。",
+        "回收只引用首例已经呈现的站位证据；公开承担和后续身手不直接证明此前一脚。母子暂时脱险、仍有围攻也须有对应画面；演员训练说法不在本例验证范围。"
+      ],
+      "sequence": [
+        "[参考观察] 从街坊受辱接到母子受威胁，旁白于参考1103.05秒退出，让等待、责任台词和起势由电影完成；1125.06秒参考转入演员知识。",
+        "[本地评审观察] v2保留约69秒电影表演，包含逼问、等待、认下责任和首轮攻击；随后直接谈动作回看，遗漏了此前的人物问题。",
+        "[修订候选，未渲染] 关键台词与首轮动作落地后，指回酱爆身后的人如今公开站出，说明当前选择而不坐实早先一脚。",
+        "[修订候选，未渲染] 接母子眼前危机缓解、苦力强仍面对围攻；若前文没有站位铺垫，只回应这次选择及后果。",
+        "[可选候选] 人物回报完成后，仅在动作细节有具体增量时短讲或重看，否则继续播放。"
+      ],
+      "return_to_story": "苦力强公开承担风险之后，先回收已有的人物线索，再落在母子眼前脱险与院中围攻未止的后果上，继续冲突；动作知识是后续可选支线。",
+      "when_not_use": [
+        "选择尚未作出就宣布英雄身份、动机或救援结果，或覆盖逼问等待而只留一句台词。",
+        "没有此前问题却编造回收，把公开承担当成早先匿名动作的直接证据。",
+        "人物后果尚未接住便转讲招式、未核实的演员经历，或为观众已看懂的动作增加固定回放。"
+      ],
+      "feedback": [
+        {
+          "origin": "reference_observation",
+          "scope": {
+            "record": "reference-studies/kungfu-jackiemovie/analysis/deep-study/evidence_index.json",
+            "clock": "reference_video",
+            "range_seconds": [
+              1087,
+              1137
+            ],
+            "evidence_ids": [
+              "E04"
+            ]
+          },
+          "judgment": "参考在关键选择前后让出旁白；情绪保护是研究解释，未逐轨分离，不能称为静音区间。"
+        },
+        {
+          "origin": "editorial_review",
+          "scope": {
+            "record": "docs/kungfu-stage2-v2-continuity-review.md",
+            "artifact": "kungfu-stage2-v2",
+            "clock": "local_v2_output",
+            "range_seconds": [
+              339.9166666666667,
+              355.0
+            ],
+            "applies_to": "动作分析入口；精确范围来自review_decisions.json的fight-replay"
+          },
+          "judgment": "评审建议先回应隐藏救人者与人物后果，再决定动作分析。修订仍为proposal_not_rendered，故整例candidate；首处局部用户认可不延伸到这里。"
+        }
+      ],
+      "transfer_rule": "风险升级迫使人物选择时，先留完整表演，再回应确实提出的前问与当前后果。迁移衔接判断，不迁移母子情节、苦力强身份、台词或原声长度。"
+    },
+    {
+      "id": "kungfu-discovery-door-repeat-no-gain",
+      "title": "阿珍开门已揭示援兵，重复回放缺乏新增观察",
+      "status": "needs_revision",
+      "source": {
+        "reference_id": "kungfu-jackiemovie",
+        "reference_range": [
+          1039,
+          1103.05
+        ],
+        "source_clock": "reference_video",
+        "source_evidence_ids": [
+          "E09"
+        ]
+      },
+      "when_use": [
+        "作为反例审查：二当家求援后，唱片、阿珍涂口红、受震、开门与全景已兑现援兵将到的期待。",
+        "观众刚看清黑帮围院，分析仅重复跟着阿珍看到人多，需要比较直接推进与额外重看的增量。"
+      ],
+      "added_value": "本地额外约11.8秒回放重复了已兑现的揭示，随后另起街坊受辱，暴露出句子相接但观看任务重新启动的问题。反例帮助把已知结果直接接到人物后果，而不是重复解释。",
+      "evidence_requirements": [
+        "E09的reference_video 1039–1103.05秒支持求援、日常反差、开门见黑帮到街坊受辱的顺序，不证明参考也采用了本地重复回放。",
+        "失败范围是local_v2_output 199.20833333333334–211.0秒，来自review_decisions.json的door-replay及连续性评审；不可填作参考时间。",
+        "应核对第一次表演已展示的信息及新增分析是否改变理解；本例引用已有评审，本轮未重新连续看片。大量镜头和音乐反差来自原电影，不能归为解说原创。",
+        "修订接后果须落在全景已出现、街坊受辱的对应画面上，不能用一句连贯话提前讲出尚未发生的欺压。"
+      ],
+      "sequence": [
+        "[参考观察及本地前提] 求援产生期待，室内日常暂缓揭示，开门与全景让观众看清援兵规模。",
+        "[本地失败] 再回放、定格解释视角，主要重复已知结果；制作方法讲解结束后另起街坊受辱，观众重新进入危险现场。",
+        "[修订候选，未渲染] 保留第一次口红、开门、全景和原声表演，去掉本次重复回放与定格，让揭示直接转入黑帮控制全院的后果。",
+        "[修订候选，未渲染] 接街坊受辱、赔笑无效和躲避，再进入逼问升级；如保留视角知识，压成能与后果连读的短句，不独立停片。",
+        "[重评条件] 若另有首次遗漏且能改变理解的视线、遮挡或声音证据，可重新考虑回放；此反例不否定所有视角分析。"
+      ],
+      "return_to_story": "全景后接街坊受辱、赔笑无效和众人躲避，再进入母子受威胁；出口是黑帮控制院子带来的后果，不能只宣布回到故事。",
+      "when_not_use": [
+        "把本地失败归因于参考，或把评审修订提案冒充用户直接否定、改稿已验证。",
+        "首次尚未看清信息或重看确有新证据时，仍机械删除所有视角分析。",
+        "按暂停次数一并缩短首处已认可片段，或只换包装而保留相同重复结论。"
+      ],
+      "feedback": [
+        {
+          "origin": "reference_observation",
+          "scope": {
+            "record": "reference-studies/kungfu-jackiemovie/analysis/deep-study/evidence_index.json",
+            "clock": "reference_video",
+            "range_seconds": [
+              1039,
+              1103.05
+            ],
+            "evidence_ids": [
+              "E09"
+            ]
+          },
+          "judgment": "参考以求援、反差和受辱连接危机升级；这是背景观察，不是本地重放无效的证据。"
+        },
+        {
+          "origin": "editorial_review",
+          "scope": {
+            "record": "video-recap-reproduction/work/kungfu-stage2-v2/continuity-review/review_decisions.json",
+            "artifact": "kungfu-stage2-v2",
+            "clock": "local_v2_output",
+            "range_seconds": [
+              199.20833333333334,
+              211.0
+            ],
+            "applies_to": "door-replay；论述见docs/kungfu-stage2-v2-continuity-review.md"
+          },
+          "judgment": "评审认为重复揭示增量不足，建议去重并短接后果。提案为proposal_not_rendered，故保留needs_revision反例，不标retired；没有该局部的用户直接否定反馈。"
+        }
+      ],
+      "transfer_rule": "先核对观众已知信息，再要求重看提供可指认的增量；已完成的揭示推进到人物后果，有新证据仍可分析视角。不迁移阿珍情节或一律取消回放的结论。"
+    }
+  ],
+  "evidence_index": {
+    "E03": {
+      "reference_id": "kungfu-jackiemovie",
+      "clock": "reference_video",
+      "range": [
+        598,
+        726
+      ],
+      "observed": "旁白613.62秒结束，688.98秒接回，中间75.36秒无标注作者旁白。随后切入试镜/片场材料。",
+      "evidence_record": "reference-studies/kungfu-jackiemovie/analysis/deep-study/evidence_index.json"
+    },
+    "E09": {
+      "reference_id": "kungfu-jackiemovie",
+      "clock": "reference_video",
+      "range": [
+        1039,
+        1103.05
+      ],
+      "observed": "求援信号之后进入唱片、阿珍口红、开门见黑帮、街坊受辱；叙述以危机升级连接。",
+      "evidence_record": "reference-studies/kungfu-jackiemovie/analysis/deep-study/evidence_index.json"
+    },
+    "E02": {
+      "reference_id": "kungfu-jackiemovie",
+      "clock": "reference_video",
+      "range": [
+        1007,
+        1050
+      ],
+      "observed": "参考1016秒与1030秒分别匹配原片约1095与1095.5秒，袭击前镜头再次出现。1037.7–1039.533另有约1.8秒稳定画面。",
+      "evidence_record": "reference-studies/kungfu-jackiemovie/analysis/deep-study/evidence_index.json"
+    },
+    "E04": {
+      "reference_id": "kungfu-jackiemovie",
+      "clock": "reference_video",
+      "range": [
+        1087,
+        1137
+      ],
+      "observed": "旁白1103.05结束，1117.61–1118.45是我做的，1125.06旁白恢复。",
+      "evidence_record": "reference-studies/kungfu-jackiemovie/analysis/deep-study/evidence_index.json"
+    }
+  }
+}

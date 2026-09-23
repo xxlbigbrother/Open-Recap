@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenRecap 电影精讲"
+  short_description: "从本地影片制作含背景知识与原声衔接的中文解说，支持 Gemini 理解及茉莉女声"
+  default_prompt: "使用 $openrecap，根据我提供的原片和范围制作中文电影精讲，保留有价值的原声并提供知识来源。"

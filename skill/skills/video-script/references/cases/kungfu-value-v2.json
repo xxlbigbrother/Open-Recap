@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "id": "kungfu-value",
+  "version": 2,
+  "cases": [
+    {
+      "id": "kungfu-value-action-opens-next-character",
+      "title": "动作结果成为下一人物的入口",
+      "status": "candidate",
+      "source": {
+        "reference_id": "kungfu-jackiemovie",
+        "source_clock": "reference_video",
+        "reference_range": [
+          1187.9,
+          1217.58
+        ],
+        "source_evidence_ids": [
+          "TV1"
+        ]
+      },
+      "when_use": [
+        "前一个动作实际把人物或冲突带到下一场空间",
+        "新人物通过当前冲突参与，而非突然名单式登场"
+      ],
+      "added_value": "把打斗的强弱结果进一步理解为叙事接力：一次攻击将地点、注意力和下一位人物连接起来。",
+      "evidence_requirements": [
+        "动作发生前后及下一人物所在空间的本片证据",
+        "若讲演员经历，另有独立资料来源"
+      ],
+      "sequence": [
+        "先让动作及落点可见",
+        "说明这个结果把冲突送到了谁所在的地方",
+        "接回该人物面对的新攻击"
+      ],
+      "return_to_story": "返回店内正在发生的攻击与反应，不留在人物履历里。",
+      "when_not_use": [
+        "仅因发生地点相同就硬说导演蓄意安排",
+        "动作并未引出新关系",
+        "转写中的演员受伤轶闻未经核实"
+      ],
+      "transfer_rule": "迁移动作后果与人物入口的关系，不迁移裁缝、武术名词或参考的句子。",
+      "feedback": [
+        {
+          "origin": "editorial_review",
+          "scope": {
+            "record": "docs/allhands/commentary-value-gap-review.md",
+            "clock": "reference_video",
+            "range_seconds": [
+              1187.9,
+              1217.58
+            ]
+          },
+          "judgment": "候选方法，文本/既有索引范围的分析，不代表用户认可或新增全片视听核验。"
+        }
+      ]
+    },
+    {
+      "id": "kungfu-value-shared-scene-different-reactions",
+      "title": "同一战局里的不同反应",
+      "status": "candidate",
+      "source": {
+        "reference_id": "kungfu-jackiemovie",
+        "source_clock": "reference_video",
+        "reference_range": [
+          1256.267,
+          1261.3
+        ],
+        "source_evidence_ids": [
+          "E07"
+        ]
+      },
+      "when_use": [
+        "同一事件后确有可辨认的表情或行为差异",
+        "这层差异能改变观众对当前局势的单一判断"
+      ],
+      "added_value": "从共同面对同一场面，读出不同处境或态度；解释可见差异，保留其他读法。",
+      "evidence_requirements": [
+        "两种反应和所回应事件的对应关系",
+        "若推断动机，需要更多行为或对白支持"
+      ],
+      "sequence": [
+        "先展示事件及反应",
+        "并置具体差异，必要时短暂保持以便读表情",
+        "给出有限读法",
+        "回到人物的下一行动"
+      ],
+      "return_to_story": "继续两人迎敌，让新的反应接受后续行动检验。",
+      "when_not_use": [
+        "把紧张表情直接判成唯一心理",
+        "只重复两人脸色不同",
+        "战斗情绪正到关键点且观众能自行看清时强行暂停"
+      ],
+      "transfer_rule": "比较可见反应如何补充场面含义；不照搬五秒定格或担忧暴露的具体结论。",
+      "feedback": [
+        {
+          "origin": "editorial_review",
+          "scope": {
+            "record": "docs/allhands/commentary-value-gap-review.md",
+            "clock": "reference_video",
+            "range_seconds": [
+              1256.267,
+              1261.3
+            ]
+          },
+          "judgment": "候选方法，文本/既有索引范围的分析，不代表用户认可或新增全片视听核验。"
+        }
+      ]
+    },
+    {
+      "id": "kungfu-value-skill-and-cost",
+      "title": "本领的用途与接下来的代价",
+      "status": "candidate",
+      "source": {
+        "reference_id": "kungfu-jackiemovie",
+        "source_clock": "reference_video",
+        "reference_range": [
+          1395.48,
+          1426.03
+        ],
+        "source_evidence_ids": [
+          "TV2"
+        ]
+      },
+      "when_use": [
+        "人物已经用能力解决眼前问题",
+        "新的要求或后果改变了该能力的用途与代价"
+      ],
+      "added_value": "解释同一能力如何在不同要求下改变意义，把选择条件说清楚，再继续看人物如何回应。",
+      "evidence_requirements": [
+        "已发生的行动、受益者、代价或新要求",
+        "区分可见行动作用与不可直接读取的心理"
+      ],
+      "sequence": [
+        "让原声完成眼前行动及新条件",
+        "联系能力解决的问题与新要求的区别",
+        "把解释落到人物下一步实际面对的选择"
+      ],
+      "return_to_story": "回到新要求后的人物行动或对白，不先给全片道德结论。",
+      "when_not_use": [
+        "只把人物行动换成选择二字",
+        "把眼前犹豫写成必然纯善或必不伤人",
+        "还未播放新要求就解释后续结局"
+      ],
+      "transfer_rule": "可用于交易、求职、战斗、亲密关系等：说明行动对象、处境和实际代价怎样变化；不固定套英雄主题。",
+      "feedback": [
+        {
+          "origin": "editorial_review",
+          "scope": {
+            "record": "docs/allhands/commentary-value-gap-review.md",
+            "clock": "reference_video",
+            "range_seconds": [
+              1395.48,
+              1426.03
+            ]
+          },
+          "judgment": "候选方法，文本/既有索引范围的分析，不代表用户认可或新增全片视听核验。"
+        }
+      ]
+    }
+  ],
+  "evidence_index": {
+    "TV1": {
+      "reference_id": "kungfu-jackiemovie",
+      "clock": "reference_video",
+      "range": [
+        1187.9,
+        1217.58
+      ],
+      "observed": "转写1187.90–1199.24叙述对手进入裁缝店并解释它引出新人物；1210.06后返回店内攻击。本条只直接核对转写，未独立复核连续镜头。",
+      "evidence_record": "reference-studies/kungfu-jackiemovie/transcripts/narrator_only.txt"
+    },
+    "E07": {
+      "reference_id": "kungfu-jackiemovie",
+      "clock": "reference_video",
+      "range": [
+        1256.267,
+        1261.3
+      ],
+      "observed": "约5.0秒保持同框表情；之后切向裁缝；原片约1397秒仍在运动。 依据既有近静止检测和抽帧索引；本版没有新增连续听审。",
+      "evidence_record": "reference-studies/kungfu-jackiemovie/analysis/deep-study/evidence_index.json"
+    },
+    "TV2": {
+      "reference_id": "kungfu-jackiemovie",
+      "clock": "reference_video",
+      "range": [
+        1395.48,
+        1426.03
+      ],
+      "observed": "转写先叙述开锁脱险，接着解释本领用途，再回到杀人入帮与街边训话。只有文本观察；参考提前介绍的后续身份不继承。",
+      "evidence_record": "reference-studies/kungfu-jackiemovie/transcripts/narrator_only.txt"
+    }
+  }
+}

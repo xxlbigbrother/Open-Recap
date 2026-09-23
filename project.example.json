@@ -9,7 +9,7 @@
     "range": [0, 120]
   },
   "understanding_dir": "work/my-film-understanding",
-  "style_path": "skill/skills/video-script/references/styles/guided-discovery-v2.json",
+  "style_path": "skills/video-script/references/styles/guided-discovery-v2.json",
   "audience": "没看过原片也能跟上，并获得额外理解",
   "reveal_policy": "progressive",
   "authoring_mode": "agent_workflow",

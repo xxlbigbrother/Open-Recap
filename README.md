@@ -1,81 +1,59 @@
 # OpenRecap
 
-从本地电影或长视频制作中文解说：**Gemini理解 → 资料检索与Agent写稿 → 证据审稿 → MiMo配音 → 剪辑、字幕与混音**。
+给 Agent 使用的完整中文电影解说工具库：**视频理解 → 资料研究与连续稿 → 剪辑规划 → 配音 → 字幕混音与成片**。支持按剧情分 Part、原声交接、回看和定格。
 
-面向没看过原片也能跟上的观众。开场交代电影背景，正文围绕有依据的观察展开，保留有价值的原声，按需要回看或定格。
+## 安装与启动
 
-- **[怎么运行](怎么运行.md)**：完整安装与执行步骤。
-- **[SKILL.md](SKILL.md)**：给Agent读取的总入口，skill名称为`openrecap`。
-- **[模型配置](references/model-config.md)**：Key、模型和接口分工。
-- **[讲述风格](references/commentary-style.md)**：背景知识、解释、原声和暂停的选择原则。
-
-## 快速开始
-
-推荐Python3.11和macOS/Linux。先安装系统FFmpeg/ffprobe，以及可显示中文的字体。
+需要 Python 3.11+、系统 FFmpeg/ffprobe、中文字体，以及可访问 AIHub 的网络。当前安装入口支持 macOS/Linux。
 
 ```bash
 git clone https://github.com/xxlbigbrother/Open-Recap.git
 cd Open-Recap
-python3.11 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python setup_tools.py
-export PATH="$PWD/tools:$PATH"
-cp .env.example .env
-chmod 600 .env
+bash setup.sh
 ```
 
-编辑`.env`：`AIHUB_API_KEY`用于Gemini，`APP_ID`与`APP_KEY`用于豆包ASR、审稿和MiMo语音。也可设置`RECAP_ENV_FILE`指向包外私有文件。需要可访问AIHub的网络，源码不包含模型账号或密钥。
+安装会准备本地环境和 `.env` 模板。编辑 `.env`：`AIHUB_API_KEY` 用于 Gemini，`APP_ID` / `APP_KEY` 用于豆包与 MiMo；凭证不随仓库提供。然后检查：
 
 ```bash
-.venv/bin/python smoke_understanding.py --check-config
-.venv/bin/python smoke_understanding.py --video /absolute/path/movie.mp4 --start 0 --seconds 30 --work-dir work/smoke-01
+.venv/bin/python run.py doctor
 ```
 
-在支持本地文件、Python和联网工具的Agent中打开本目录，发送：
+在能读本地文件、执行命令和联网研究的 Agent 中打开仓库，发送一句话：
 
-> 请读取当前目录SKILL.md，用我提供的原片制作第一部分电影精讲。理解用Gemini，配音用茉莉原速。开场补充有来源的电影背景，让新观众能跟上剧情。核对素材与时间线，研究并写连续稿，再编排原声和镜头，最终输出视频与带时间稿件。
+> 读取 skills/openrecap/SKILL.md，用「我的原片路径」制作第一部分中文电影解说。先介绍有来源的电影背景，让新观众能跟上剧情，使用茉莉女声。请完成理解、研究、创作、配音、剪辑和成片，输出可播放视频。
 
-第二部分需要Agent研究、选题和写稿；`--prepare-only`只准备证据，不会自动完成创作。详细命令见[怎么运行](怎么运行.md)。
-
-## 模型与范围
-
-- 视觉理解、全局索引：Gemini3.8 Flash，默认`low`。
-- 原片转写：豆包Seed ASR2.0，保留词时间。
-- 第二阶段审稿：现有旧AIHub豆包Seed2.1 Pro260628。
-- 项目模板配音：MiMo-v2.5-TTS，茉莉原速。
-
-Gemini已完成图片/视频输入、短片理解及第二部分证据交接的真实验证；MiMo茉莉已用于完整首章配音。模型推断仍需回查，字幕当前主要按文字估时，技术检查不替代连续看片。`project.example.json`的示例时长必须换成实际媒体时长。
-
-## 代码结构
-
-```text
-SKILL.md                 Agent总入口
-run_skill.py             阶段路由与配置
-smoke_understanding.py   新目录短片验证
-editorial_render.py      配音、时间编译和合成
-gemini_adapter.py        Gemini理解接口
-aihub_adapter.py         豆包ASR/审稿/语音接口
-skill/skills/            理解、写稿、画面呈现、合成四个阶段
-references/              风格和模型配置
-tests/                   本地适配测试
-skill/tests/             分阶段行为测试
-```
-
-底层阶段按独立目录保留，以避免同名模块相互污染。应从根入口运行，直接调用阶段脚本可能绕过本项目模型配置。
-
-当前工作流由根`SKILL.md`引导，配音和渲染使用`editorial_render.py`。上游旧的一键编排、独立配音和先裁片再写稿入口已移除；完整命令以本项目[怎么运行](怎么运行.md)为准。
-
-## 测试
+Agent 按技能自动接力。脚本统一入口是：
 
 ```bash
-PYTHONPATH="$PWD" .venv/bin/python -m pytest test_aihub_adapter.py tests -q
-.venv/bin/python skill/scripts/test.py
+.venv/bin/python run.py run --video "/absolute/path/movie.mp4" \
+  --work-dir work/my-film-part1 --title "实际电影名" --start 0 --end 1800
 ```
 
-测试不需要真实Key；各阶段在独立进程执行。运行产物保存在忽略的`work/`、`reports/`和`output/`目录。
+首次运行完成理解并返回 `needs_authoring`，Agent 根据任务文件研究、写候选，再运行同一项目完成后续制作。**一句话完成是 Agent 工作流；单独执行脚本不会代替 Agent 写出已核实的优质稿件。** 细节见 [怎么运行](怎么运行.md)。
 
-## 来源与许可
+## 六个完整 skill
 
-本项目基于MIT许可的[zenstory-ai/video-recap-skills](https://github.com/zenstory-ai/video-recap-skills)适配，保留其许可证及必要来源记录，详见[NOTICE.md](NOTICE.md)。OpenRecap代码采用[MIT](LICENSE)。
+- [openrecap](skills/openrecap/SKILL.md)：总流程、任务接力和交付。
+- [video-understanding](skills/video-understanding/SKILL.md)：画面、对白与剧情理解。
+- [video-script](skills/video-script/SKILL.md)：电影背景研究、风格、连续稿与审稿。
+- [video-cut](skills/video-cut/SKILL.md)：播放、回放、定格与时间编排。
+- [video-voiceover](skills/video-voiceover/SKILL.md)：MiMo / 豆包配音、实际音长与缓存。
+- [video-assemble](skills/video-assemble/SKILL.md)：字幕、原声保护、混音和成片。
 
-仓库不包含原片、参考视频、配音、私人配置、虚拟环境、二进制或缓存。请使用有权处理的素材；示例案例中的事实和反馈属于对应影片，不能直接当作另一部电影的证据。
+每个 skill 的必要代码与参考放在对应目录。公共模型适配和启动辅助在 `scripts/`，回归测试在 `tests/`。运行只使用本仓库与用户配置，不依赖作者机器上的实验目录。
+
+## 默认配置与验证范围
+
+视觉与全局索引使用 Gemini3.8 Flash，ASR 使用豆包 Seed ASR2.0，审稿使用 Seed2.1 Pro260628，项目默认 MiMo 茉莉原速。详见 [模型配置](references/model-config.md) 和 [讲述风格](references/commentary-style.md)。
+
+已有版本用《功夫》《钢铁侠》进行过真实实验。代码测试包含实际合成素材的剪辑、音频、字幕及时间校验；字幕主要按文字估时，资料与理解仍需核实，技术检查不替代看片。
+
+开发者运行全部测试：
+
+```bash
+.venv/bin/python scripts/test.py
+```
+
+## 来源
+
+基于 [zenstory-ai/video-recap-skills](https://github.com/zenstory-ai/video-recap-skills) 适配，保留 [上游 MIT 许可](LICENSE.upstream) 与 [来源说明](NOTICE.md)。OpenRecap 代码采用 [MIT](LICENSE)。原片、参考视频、配音和真实配置不包含在仓库中。

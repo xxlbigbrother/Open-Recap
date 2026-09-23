@@ -241,7 +241,7 @@ def run_pipeline(project_path, *, candidate=None, executor=None):
                     f"# 继续制作电影解说\n\n项目：{path}\n证据目录：{result['prepared_dir']}\n\n"
                     f"读取 {ROOT / 'skills/video-script/SKILL.md'}，核对本片理解和原片。检索片名与背景，"
                     "采用前打开来源，将核实知识写入项目 research_path；更新资料后重跑本命令准备新证据。"
-                    "先写 author_draft.md 连续稿，再编排有证据的候选。不能把搜索摘要当核实事实。\n\n"
+                    "先在 author_draft.md 写整个Part的大场景路线与取舍：哪些普通推进压缩、哪些观察展开、哪组原声完整保留，以及上一结果怎样接到下一场。再写连续稿和有证据的候选；不要只在完整原片中插零星短评。不能把搜索摘要当核实事实。\n\n"
                     f"候选写入：{work / 'recap_story_plan.candidate.json'}\n"
                     f"完成后继续：{shlex.join([sys.executable, str(ROOT / 'run.py'), 'run', '--project', str(path)])}\n"
                     "需要修稿时检查具体 findings，改候选后重跑；技术通过后仍需看片。\n", encoding="utf-8")

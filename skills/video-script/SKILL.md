@@ -23,6 +23,8 @@ description: >
 
 阅读 [创作剪辑工作法](../references/creative-editing-playbook.md)。重看、回放或知识解释同时参考 [重看式讲述](../references/guided-rewatch.md)。风格和案例统一保存在同级 `../references/`；项目 `style_path` 选择其中 `styles/` 的版本。它们提供讲述方法，不能提供目标影片事实。
 
+长篇精讲、旁白与原声比例失衡或换场生硬时，先读 [节奏与大场景衔接](../references/rhythm-and-scene-handoffs.md)。以完整 Part 规划，不把独立小段按原片顺序拼接当作整体结构。
+
 ## 2. 核实电影资料
 
 按 [研究指南](references/research-guide.md) 生成或读取 `film_research.json`，筛选 `opening_brief.json`。
@@ -32,7 +34,7 @@ description: >
 `film_research.json` 不会自动进入正式证据。将核实事实写成 `stage2_research.json` 的 `facts` 格式，在项目设置 `research_path`；具体字段见研究指南。
 研究或旁注变化后重新准备输入，不能把新 ID 直接补进临时证据快照。
 
-## 3. 准备证据与连续稿
+## 3. 准备证据、场景路线与连续稿
 
 从包根运行：
 
@@ -43,9 +45,13 @@ python3 scripts/run_skill.py video-script editorial.py --project /path/project.j
 阅读本次返回的 `prepared_dir` 中的 `evidence_bundle.json`、`style_snapshot.json` 和输入记录。
 `prepared` 仅表示输入准备完成。详细项目契约与版本规则见 [参考驱动流程](references/reference-driven-workflow.md)。
 
-Agent 先写 `author_draft.md`：连续口述、原声任务、信息揭示时机和知识解释后返回剧情的出口。
+Agent 先在 `author_draft.md` 写大场景路线：本场改变什么，哪些普通推进压缩、哪个观察展开、哪组原声完整体验，以及为什么进入下一场。沿用 `chapters` 表达这些作者选择的叙事单元，不直接采用场景检测的每个镜头作为章节。
+
+再写连续口述、原声任务、信息揭示时机和知识解释后返回剧情的出口。每个大场景边界检查“上一结果 → 换场关系 → 下场人物/地点/目标的必要定位”，把关系落实到可听旁白或可见/可听的原声桥接，不能只写在制作备注。
 旁白必须增加上下文、因果、预期或证据支持的解释；画面、原声或沉默足够时让出声音。
 句子服从口述与呼吸，不按字幕换行切碎，不追求固定覆盖率、知识点数量或暂停次数。
+
+旁白变短后同时复核选片。保护完整笑点或选择过程，不默认保护整场所有对白；连续多个原声段应合并检查观看任务。删低贡献过程与补有价值解释都可改变比例，禁止用重复概括或机械裁片凑数字。
 
 再编排 `recap_story_plan.candidate.json`，字段以 `scripts/editorial_prompts.py` 的 `STORY_SHAPE` 和 `scripts/editorial_contract.py` 为准。
 所有证据 ID 来自本次正式证据包；研究主张使用 `kind: research`。纯原声段允许 `narration: null`。
@@ -72,8 +78,17 @@ python3 scripts/run_skill.py video-script editorial.py --project /path/project.j
 
 省略 `--candidate` 的模型生成仍是显式实验路径，不能替代默认 Agent 创作流程。
 
+语义评审收到按候选数组顺序计算的 `rhythm_overview`：配音前的估算占比、最长无旁白区间、章节分布与前后交接。它是定位工具，不是硬门槛；缺失场景前提、重复无增量等问题必须指出具体段落。编号跳号和单纯比例偏好不算结构错误。
+
 ## 5. 交给渲染与看片
 
 由包根 `scripts/editorial_render.py --audio-only` 获取真实配音长度，再检查呈现窗口与证据同步。
 超时先修改完整表达或有价值的画面，不截语音、不无声删字、不额外提速；改稿后重新提交同一候选入口。
 检查实际画面、字幕、原声交接和完整声音主线，分别报告机械检查与真实观看、听审范围。
+
+配音后渲染桥会保存 `editorial_rhythm.json`；检查最长连续无旁白区间与所有大场景边界。分章制作时，还要对合并后的整 Part 连续听读和看片，单章评审不能替代跨章检查。 单章提交应在项目 `creative_brief.context_before_range` 简述此前已展示的信息，避免审稿把上下文未提供误判成影片未交代。已有成片计划可独立诊断：
+
+```bash
+python3 scripts/run_skill.py video-script editorial_rhythm.py \
+  --compiled /path/work/presentation_compiled.json --output /path/work/editorial_rhythm.json
+```

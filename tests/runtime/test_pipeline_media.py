@@ -78,6 +78,10 @@ def test_candidate_to_real_video_through_unified_pipeline(tmp_path, monkeypatch)
     assert 1.9 < float(media["format"]["duration"]) < 2.2
     assert (candidate.parent / "subtitles.ass").is_file()
     assert read_qc(candidate.parent)["passed"] is True
+    rhythm = json.loads((candidate.parent / "editorial_rhythm.json").read_text())
+    assert rhythm["duration_basis"] == "measured_audio"
+    assert .2 < rhythm["narration_occupancy"] < .3
+    assert rhythm["assessment"] == "descriptive_only"
 
 
 def read_qc(work):

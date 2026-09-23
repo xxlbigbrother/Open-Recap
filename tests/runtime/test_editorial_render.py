@@ -153,7 +153,7 @@ def test_render_cli_reuses_voice_and_preserves_pipeline_arguments(tmp_path, monk
             assert command[command.index('--width') + 1] == '1280'
             assert command[command.index('--height') + 1] == '720'
             (work / 'presentation_compiled.json').write_text(json.dumps({
-                'narrations': [], 'operations': [], 'protected_audio': [],
+                'duration': 0, 'narrations': [], 'operations': [], 'protected_audio': [],
             }))
         else:
             assert entry == 'assemble.py'
@@ -236,7 +236,7 @@ def test_render_cli_chooses_platform_font_without_overriding_configuration(
         stages.append(entry)
         if entry == 'presentation.py':
             (work / 'presentation_compiled.json').write_text(
-                '{"narrations":[],"operations":[],"protected_audio":[]}'
+                '{"duration":0,"narrations":[],"operations":[],"protected_audio":[]}'
             )
         else:
             assert entry == 'assemble.py'

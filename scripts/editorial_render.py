@@ -20,6 +20,7 @@ def prepare_outputs(project,compiled,catalog,work):
     from editorial_inputs import read_json
     from editorial_runner import write_json
     from editorial_timing import build_tts_meta,map_source_evidence
+    from editorial_rhythm import summarize_compiled
 
     meta=build_tts_meta(compiled,catalog);write_json(work/'tts_meta.json',meta);write_json(work/'narration.json',meta['segments'])
     base=Path(project['understanding_dir'])
@@ -27,6 +28,7 @@ def prepare_outputs(project,compiled,catalog,work):
     silence=read_json(base/'silence_periods.json') if (base/'silence_periods.json').exists() else []
     mapped=map_source_evidence(compiled,read_json(base/'asr_result.json'),acoustic,silence)
     write_json(work/'speech_boundary_anchors.json',mapped)
+    write_json(work/'editorial_rhythm.json',summarize_compiled(compiled))
     return meta
 
 

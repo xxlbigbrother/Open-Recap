@@ -5,7 +5,7 @@
 ## 推荐执行：Agent先写，再验证投影
 
 1. 准备项目JSON，运行 `editorial.py --prepare-only`。阅读输出的 `evidence_bundle.json` 与 `style_snapshot.json`，核对源身份和时间线。参考案例只提供讲述方法，目标影片事实只能来自本项目证据。
-2. 先写 `author_draft.md`：连续口述、原声任务、信息揭示及每段返回剧情的出口。知识或暂停没有增量时，选择继续播放。不能因模型有暂停能力就每隔一段暂停。
+2. 先在 `author_draft.md` 规划整个 Part 的大场景路线：普通推进怎样压缩、观察在哪里展开、原声保留哪组完整表演、大场景切换如何交代关系与定位；再写连续口述和原声任务。知识或暂停没有增量时，比较压缩该过程与保留有效表演，不直接退回全程原片播放。不能因模型有暂停能力就每隔一段暂停。
 3. 再将稿件与画面共同编排为 `recap_story_plan.candidate.json`。形态遵循 `scripts/editorial_prompts.py` 的 `STORY_SHAPE`；完整字段定义和校验见 `scripts/editorial_contract.py`。段落可以是纯原声，`narration: null`；一段旁白不能同时盖住自己声明保护的原声。
 4. 离线验证必须用 `load_project` → `build_evidence` → `load_style` 重建输入，再运行 `validate_story(story, project, evidence, style)`。不要另写一套加载器或只往临时evidence_bundle里加入截图ID；新增目视观察先存入project引用的verified_notes，再用正式入口复核。解决具体问题。把每个主张的证据、问答回收、旁白有效窗口写实；不要删约束来过关。
 5. 用 `editorial.py --candidate` 验证并做一次模型语义评审。此模式不自动改Agent稿。通过后统一投影为视听板与执行计划，记录 `authoring_origin=agent_candidate`。

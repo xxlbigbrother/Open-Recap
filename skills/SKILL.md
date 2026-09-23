@@ -56,7 +56,7 @@ description: 从本地电影制作中文解说成片。统一调度视频理解�
   --work-dir work/my-film-part1/editorial --prepare-only
 ```
 
-先写连续的 `author_draft.md`，再按当前证据 ID 编排 `editorial/recap_story_plan.candidate.json`。候选结构以创作技能脚本中的 `STORY_SHAPE` 和校验器为准；案例只教方法，不提供新影片事实。
+先按 [节奏与大场景衔接](references/rhythm-and-scene-handoffs.md) 在 `author_draft.md` 确定整个 Part 的场景路线与取舍，再写连续稿和原声交接。大场景切换要让观众明白上一结果、换场关系及下一场最低定位；删旁白后不能默认把原片长段全部留下。再按当前证据 ID 编排 `editorial/recap_story_plan.candidate.json`。候选结构以创作技能脚本中的 `STORY_SHAPE` 和校验器为准；案例只教方法，不提供新影片事实。
 
 然后重复统一入口：
 
@@ -72,4 +72,4 @@ description: 从本地电影制作中文解说成片。统一调度视频理解�
 
 `run.py status --project ...` 查看当前状态。`complete` 表示本次技术检查、输出存在及完整解码通过；输入或产物被改动会标为 `stale`，应重新运行。
 
-交付 `delivery/recap_项目id.mp4`、`editorial/narration_draft.md` 和必要知识来源，标明原片覆盖范围与 Part。抽查中文字幕和接点，并正常速度连续观看、只听声音复核。技术通过不代表已经完成艺术效果验收；准确说明实际检查范围。
+交付 `delivery/recap_项目id.mp4`、`editorial/narration_draft.md` 和必要知识来源，标明原片覆盖范围与 Part。查看 `editorial_rhythm.json` 定位长原声区间，抽查中文字幕和接点，并正常速度连续观看、只听声音复核整个 Part 的大场景转换。技术通过不代表已经完成艺术效果验收；准确说明实际检查范围。

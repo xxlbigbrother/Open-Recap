@@ -2,7 +2,7 @@
 
 本文件是共享创作参考；下文候选格式与执行脚本见 [解说创作技能](../video-script/SKILL.md)。
 
-本参考规定 Agent 的创作判断。先写连续口述，再把决定编入 `recap_story_plan.candidate.json`，由 `editorial.py --candidate` 校验、评审并统一投影执行计划。
+本参考规定 Agent 的创作判断。先用 [节奏与大场景衔接](rhythm-and-scene-handoffs.md) 明确整个 Part 的场景取舍，再写连续口述，把决定编入 `recap_story_plan.candidate.json`，由 `editorial.py --candidate` 校验、评审并统一投影执行计划。
 
 ## 先判断创作控制模式
 
@@ -113,7 +113,7 @@ ffmpeg -i input.mp4 -vf "select='gt(scene,0.35)',showinfo" -an -f null -
 - `transition`：跨越时间、地点或素材来源；
 - `none`：画面、原声或沉默已经足够。
 
-`7:3` 只可作为没有更好判断时的粗略首稿参考，不是质量目标或覆盖配额。强对白可以让一个 beat 完全没有旁白；信息密集的压缩段也可以由旁白主导。
+比例由每场的观看任务与选片决定。强对白可以让一个 beat 完全没有旁白；信息密集的压缩段也可以由旁白主导。连续多个原声 beat 要合起来审查，不能靠拆段隐藏长时间没有作者引导；也不能按某个固定比例强行配满。
 
 旁白拥有一个 beat 时，先写成一个连续思路，常见推进是“前提 → 触发动作 → 变化/意义”。句子数量不是目标；一个完整长句或少量相连句都可以，关键是一次 TTS 能自然说完而不是一句一停。字幕可以为阅读拆成多个 cue，但不能反过来把朗读稿切成碎 utterance。
 

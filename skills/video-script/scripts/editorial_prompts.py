@@ -1,8 +1,14 @@
 """Reference-guided story generation and independent semantic review contracts."""
 import json
 from editorial_inputs import index_evidence
+from editorial_rhythm import summarize_story
 
-PROMPT_VERSION=5
+PROMPT_VERSION=6
+
+RHYTHM_GUIDANCE='''先按人物目标、地点/时间与冲突阶段规划大场景路线，再写连续稿和具体镜头。每场决定哪些普通推进压缩、哪些观察展开、哪组表演完整保留；chapters可表达这些叙事单元。解说是在选片基础上带观众经历故事，不能只在几乎完整的原片里插少量短评。
+声音比例服从本场任务：解释段要交付具体新增理解，喜剧/选择段允许原声充分完成铺垫、落点和反应。删短旁白后同时复核是否还需保留下面的全部画面；不要靠复述已清楚动作补占比，也不要按统一秒数裁原声。
+连续多个原声段要合起来看，拆成多个paragraph不会打断观众听到的长原片区间。写清作者退出前交代什么、电影兑现什么、作者回来接住什么；只有制作备注有衔接不代表可听正文已接上。
+大场景换场需传递上一结果、换场关系和下一场的最低定位。关系可为后果、人物行动、对手回应、时间跳转或对照；没有因果就不硬编。先检查实际的末句/原声落点与下场首句/首个动作，而非只检查JSON字段齐全。不要把独立小段按原片时间拼接当成整Part结构。'''
 
 STORY_SHAPE={
  'schema_version':1,'project_id':'project.id','source_id':'project.source.id','style':{'id':'profile.id','version':1},
@@ -49,7 +55,7 @@ def generate_messages(project,evidence,style,previous=None,findings=None):
             'glossary_context_only':evidence.get('glossary_context_only',[]),'warnings':evidence.get('warnings',[])}
     context={'PROJECT':{k:v for k,v in project.items() if k not in {'project_path'}},
              'TARGET_EVIDENCE':target,'REFERENCE_LIBRARY':{'profile':style['profile'],'cases':style['cases']},'OUTPUT_CONTRACT':STORY_SHAPE}
-    messages=[{'role':'system','content':SYSTEM},{'role':'user','content':json.dumps(context,ensure_ascii=False)}]
+    messages=[{'role':'system','content':SYSTEM+'\n'+RHYTHM_GUIDANCE},{'role':'user','content':json.dumps(context,ensure_ascii=False)}]
     if previous is not None:messages.append({'role':'assistant','content':json.dumps(previous,ensure_ascii=False)})
     if findings:messages.append({'role':'user','content':'修复以下具体问题，保持未受影响的有效决定；重新输出完整JSON。\n'+json.dumps(findings,ensure_ascii=False)})
     return messages
@@ -72,7 +78,8 @@ def review_messages(story,project,evidence,style):
 字段语义：paragraph的id是稳定标识，播放顺序由paragraphs数组和presentation数组决定，编号无需连续。handoff、claims、added_value是制作说明，不会作为旁白朗读；听众只听narration.text与原声。after_events约束事件先于旁白发生，不要求回到那一帧；只有type=replay才会回放。原声中有音乐不等于必须全程禁止旁白，关键保护以protected_audio及实际表演任务为准。
 提出timing问题时，区分原片秒数与输出秒数，列明旁白起止、可用窗口及发生冲突的原声区间；不能一边算出足够窗口，一边宣称溢出。若项目提供当前候选的实测配音与编译时间，用它检查交接，不重复用字数估算覆盖实测时长；未核实的自报数字仍须保留不确定性。艺术节奏或留白偏好记warning，不能虚构数值冲突。
 只有可定位的明显问题记error，风格偏好记warning。参考案例不是目标影片事实。不要虚构源画面，不因为缺少剧情索引就认为没有剧情。若关键事实与verified_note冲突，要求使用已核验旁注。'''
-    return [{'role':'system','content':system},{'role':'user','content':json.dumps({'project':project,'story':story,'target_evidence':review_evidence(story,evidence),'style':style['profile']},ensure_ascii=False)}]
+    system+='\n'+RHYTHM_GUIDANCE+'\nrhythm_overview是脚本按当前候选计算的描述性概览，配音前为文字估时，不是实测或艺术评分。先查看最长的三组without_narration_runs：其中跨越了几个不同观看任务，是否只是整场原片逐段堆叠，是否应压缩过程或在任务转换点让作者接回。再看chapter_handoffs里的前后实际文稿和定位。审单章时先读project.creative_brief.context_before_range；未提供前章内容时，将整体衔接列为需要合并后复核，不凭缺失上下文认定前章没有交代。不要因占比低或原声长就记error；只有能指出缺失前提、关系断裂、重复无增量或事实问题时给具体修改。合成最终Part时还须复核跨独立文件的边界，单章通过不能代替整体评阅。'
+    return [{'role':'system','content':system},{'role':'user','content':json.dumps({'project':project,'story':story,'target_evidence':review_evidence(story,evidence),'style':style['profile'],'rhythm_overview':summarize_story(story,project)},ensure_ascii=False)}]
 
 
 def authoring_messages(project,evidence,style):
@@ -82,4 +89,4 @@ def authoring_messages(project,evidence,style):
 spoken_text可为空，表示完整原声段；非空时是一段适合当前语速口述的连续思路。面向第一次观看者，句子必须增加观察、因果、期待或必要前提，避免把后面的所有动作提前复述。每段只承担一个清楚任务；让电影说的话不再写进旁白。安排原声后，下一段接住刚发生的后果。
 REFERENCE_LIBRARY只提供方法，TARGET_EVIDENCE提供本片事实。知识没有已核验来源就不硬加，人物动机保持证据边界。项目required_audio_ranges表演必须保留。不要为了用定格而找地方暂停。第一次已认可暂停不在当前范围时只接回其兴趣，不重讲整段证据。
 先选择一个具体观察角度，再用合适长度讲明白。不要只写两句概括就把所有原片保留；也不要每个镜头都配上解释。'''
-    return [{'role':'system','content':instructions},{'role':'user','content':json.dumps(context,ensure_ascii=False)}]
+    return [{'role':'system','content':instructions+'\n'+RHYTHM_GUIDANCE},{'role':'user','content':json.dumps(context,ensure_ascii=False)}]

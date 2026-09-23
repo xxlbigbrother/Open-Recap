@@ -2,7 +2,7 @@
 import json
 from editorial_inputs import index_evidence
 
-PROMPT_VERSION=4
+PROMPT_VERSION=5
 
 STORY_SHAPE={
  'schema_version':1,'project_id':'project.id','source_id':'project.source.id','style':{'id':'profile.id','version':1},
@@ -69,6 +69,8 @@ def review_evidence(story,evidence):
 def review_messages(story,project,evidence,style):
     system='''你是首次观看者视角的电影解说审稿人。返回JSON {"verdict":"pass|revise","findings":[{"severity":"error|warning","code":"coherence|added_value|evidence|question_payoff|timing","path":"paragraphs[序号]","message":"具体问题与修法"}]}。
 审阅完整段落及中间原声，不只读单句。检查：首次观看能否跟上；旁白是否增加信息；暂停有无必要；前文问题后面是否接住；知识是否有来源；推断是否被假装成事实；按约3.4字/秒估算语音是否能落在有效画面里。不要以字数、暂停数量或固定比例作为质量目标。
+字段语义：paragraph的id是稳定标识，播放顺序由paragraphs数组和presentation数组决定，编号无需连续。handoff、claims、added_value是制作说明，不会作为旁白朗读；听众只听narration.text与原声。after_events约束事件先于旁白发生，不要求回到那一帧；只有type=replay才会回放。原声中有音乐不等于必须全程禁止旁白，关键保护以protected_audio及实际表演任务为准。
+提出timing问题时，区分原片秒数与输出秒数，列明旁白起止、可用窗口及发生冲突的原声区间；不能一边算出足够窗口，一边宣称溢出。若项目提供当前候选的实测配音与编译时间，用它检查交接，不重复用字数估算覆盖实测时长；未核实的自报数字仍须保留不确定性。艺术节奏或留白偏好记warning，不能虚构数值冲突。
 只有可定位的明显问题记error，风格偏好记warning。参考案例不是目标影片事实。不要虚构源画面，不因为缺少剧情索引就认为没有剧情。若关键事实与verified_note冲突，要求使用已核验旁注。'''
     return [{'role':'system','content':system},{'role':'user','content':json.dumps({'project':project,'story':story,'target_evidence':review_evidence(story,evidence),'style':style['profile']},ensure_ascii=False)}]
 
